@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: ozone-backend
+    env: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      # Set the following in the Render dashboard (do NOT commit real values):
+      # SUPABASE_URL
+      # SUPABASE_ANON_KEY
+      # SUPABASE_SERVICE_ROLE_KEY
+      # GROQ_API_KEY
+      # GEMINI_API_KEY
+      # FRONTEND_URL  (your Vercel URL, e.g. https://ozone.vercel.app)
+      - key: DEMO_USER_ID
+        value: 00000000-0000-0000-0000-000000000001
+      - key: EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: CHAT_MODEL
+        value: llama-3.3-70b-versatile
+      - key: SUMMARY_MODEL
+        value: llama-3.3-70b-versatile
+      - key: MAX_SHORT_MEMORY_MESSAGES
+        value: 50
+      - key: SEMANTIC_SEARCH_THRESHOLD
+        value: 0.5
+      - key: SEMANTIC_SEARCH_LIMIT
+        value: 10
