@@ -9,16 +9,23 @@ const useChatStore = create((set, get) => ({
   isLoading: false,
   isSending: false,
   error: null,
+  sidebarOpen: false,
+
+  // Actions - Sidebar
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  closeSidebar: () => set({ sidebarOpen: false }),
 
   // Actions - Folders
   fetchFolders: async () => {
     try {
       const { data } = await api.getFolders()
       set({ folders: data })
-      // Auto-select first folder if none selected
+      // Auto-select General folder (is_general=true), fallback to first folder
       if (!get().activeFolder && data.length > 0) {
-        set({ activeFolder: data[0] })
-        get().fetchMessages(data[0].id)
+        const generalFolder = data.find((f) => f.is_general) || data[0]
+        set({ activeFolder: generalFolder })
+        get().fetchMessages(generalFolder.id)
       }
     } catch (err) {
       set({ error: err.message })

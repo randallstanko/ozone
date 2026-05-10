@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { MessageSquare, Brain, Plus, FolderPlus } from 'lucide-react'
+import { MessageSquare, Brain, FolderPlus } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import FolderItem from './FolderItem'
 
 export default function Sidebar({ currentView, onViewChange }) {
-  const { folders, activeFolder, fetchFolders, setActiveFolder, createFolder } = useChatStore()
+  const { folders, activeFolder, fetchFolders, setActiveFolder, createFolder, sidebarOpen, closeSidebar } = useChatStore()
   const [showNewFolder, setShowNewFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
 
@@ -20,8 +20,21 @@ export default function Sidebar({ currentView, onViewChange }) {
     setShowNewFolder(false)
   }
 
+  const handleFolderClick = (folder) => {
+    setActiveFolder(folder)
+    onViewChange('chat')
+    closeSidebar()
+  }
+
   return (
-    <aside className="w-72 bg-dark-950 border-r border-dark-800 flex flex-col h-full">
+    <aside
+      className={`
+        fixed inset-y-0 left-0 z-40 w-72 bg-dark-950 border-r border-dark-800 flex flex-col h-full
+        transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:relative md:translate-x-0 md:z-auto
+      `}
+    >
       {/* Header */}
       <div className="p-4 border-b border-dark-800">
         <h1 className="text-xl font-bold bg-gradient-to-r from-ozone-primary to-ozone-secondary bg-clip-text text-transparent">
@@ -33,7 +46,7 @@ export default function Sidebar({ currentView, onViewChange }) {
       {/* View Toggle */}
       <div className="flex p-2 gap-1 mx-2 mt-2 bg-dark-900 rounded-lg">
         <button
-          onClick={() => onViewChange('chat')}
+          onClick={() => { onViewChange('chat'); closeSidebar() }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
             currentView === 'chat'
               ? 'bg-dark-700 text-white'
@@ -44,7 +57,7 @@ export default function Sidebar({ currentView, onViewChange }) {
           Chat
         </button>
         <button
-          onClick={() => onViewChange('notes')}
+          onClick={() => { onViewChange('notes'); closeSidebar() }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
             currentView === 'notes'
               ? 'bg-dark-700 text-white'
@@ -63,10 +76,7 @@ export default function Sidebar({ currentView, onViewChange }) {
             key={folder.id}
             folder={folder}
             isActive={activeFolder?.id === folder.id}
-            onClick={() => {
-              setActiveFolder(folder)
-              onViewChange('chat')
-            }}
+            onClick={() => handleFolderClick(folder)}
           />
         ))}
       </div>
