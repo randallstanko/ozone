@@ -10,7 +10,7 @@ function App() {
   const { sidebarOpen, toggleSidebar, closeSidebar } = useChatStore()
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-full overflow-hidden">
       {/* Mobile overlay backdrop */}
       {sidebarOpen && (
         <div
@@ -24,8 +24,8 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Mobile top bar with hamburger */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-dark-800 bg-dark-950 md:hidden">
+        {/* Mobile top bar with hamburger — sticky, never scrolls away */}
+        <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-3 border-b border-dark-800 bg-dark-950 md:hidden shrink-0">
           <button
             onClick={toggleSidebar}
             className="text-dark-300 hover:text-white transition-colors"

@@ -7,15 +7,20 @@ import ChatInput from './ChatInput'
 export default function ChatArea() {
   const { messages, activeFolder, isLoading, isSending } = useChatStore()
   const messagesEndRef = useRef(null)
+  const isFirstRender = useRef(true)
 
+  // Scroll to bottom on every messages change.
+  // Use 'instant' on first render so the initial load doesn't animate from top.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const behavior = isFirstRender.current ? 'instant' : 'smooth'
+    isFirstRender.current = false
+    messagesEndRef.current?.scrollIntoView({ behavior })
   }, [messages])
 
   return (
-    <div className="flex-1 flex flex-col h-full">
-      {/* Header */}
-      <header className="h-14 border-b border-dark-800 flex items-center px-6 shrink-0">
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Desktop folder header (hidden on mobile — mobile header is in App.jsx) */}
+      <header className="h-14 border-b border-dark-800 flex items-center px-6 shrink-0 hidden md:flex">
         {activeFolder && (
           <div className="flex items-center gap-3">
             <span className="text-xl">{activeFolder.icon}</span>
@@ -24,8 +29,8 @@ export default function ChatArea() {
         )}
       </header>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      {/* Messages — only this area scrolls */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ozone-primary"></div>
@@ -54,11 +59,14 @@ export default function ChatArea() {
             )}
           </>
         )}
+        {/* Scroll anchor — always at the bottom */}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <ChatInput />
+      {/* Input — flex-none keeps it pinned, never scrolls */}
+      <div className="shrink-0">
+        <ChatInput />
+      </div>
     </div>
   )
 }
