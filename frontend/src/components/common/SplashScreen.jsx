@@ -47,7 +47,7 @@ export default function SplashScreen({ visible }) {
         setPhraseIndex((i) => (i + 1) % PHRASES.length)
         setPhraseIn(true)
       }, 500)
-    }, 4000)
+    }, 7000)
     return () => clearInterval(id)
   }, [])
 
