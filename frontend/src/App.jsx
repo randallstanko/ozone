@@ -8,26 +8,29 @@ import useChatStore from './store/chatStore'
 
 function App() {
   const [view, setView] = useState('chat')
-  const [splashVisible, setSplashVisible] = useState(true)
+  const [dataReady, setDataReady] = useState(false)
   const [splashMounted, setSplashMounted] = useState(true)
   const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders } = useChatStore()
 
   useEffect(() => {
     const load = async () => {
+      const startTime = Date.now()
       await fetchFolders()
-      // Short settle delay, then start fade-out
+      // Ensure splash shows for at least 20 seconds
+      const elapsed = Date.now() - startTime
+      const remaining = Math.max(0, 20000 - elapsed)
       setTimeout(() => {
-        setSplashVisible(false)
+        setDataReady(true)
         // Unmount after fade-out transition finishes (0.85s + buffer)
         setTimeout(() => setSplashMounted(false), 950)
-      }, 300)
+      }, remaining)
     }
     load()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
-      {splashMounted && <SplashScreen visible={splashVisible} />}
+      {splashMounted && <SplashScreen visible={!dataReady} />}
 
       <div className="flex h-full overflow-hidden">
         {/* Mobile overlay backdrop */}
