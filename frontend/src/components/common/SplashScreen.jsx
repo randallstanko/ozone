@@ -12,7 +12,7 @@ const PHRASES = [
   },
   {
     main: 'No soy un chatbot. Soy tu conciencia digital.',
-    sub: 'Hablame de lo que sea: finanzas, relaciones, proyectos, emociones, estudio, salud.'
+    sub: 'Contame lo que quieras: finanzas, relaciones, proyectos, emociones, estudio, salud.'
   },
   {
     main: 'Conozco tu historia completa.',
