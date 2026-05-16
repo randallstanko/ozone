@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { supabase } from '../config/supabase'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
@@ -7,6 +8,19 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+})
+
+// Interceptor: agrega el token JWT de Supabase en cada request
+api.interceptors.request.use(async (config) => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`
+    }
+  } catch {
+    // Sin sesion, el backend usara DEMO_USER_ID
+  }
+  return config
 })
 
 // Folders
@@ -33,5 +47,8 @@ export const deleteNote = (id) => api.delete(`/notes/${id}`)
 // Memory
 export const getGlobalMemory = () => api.get('/memory/global')
 export const searchMemory = (q) => api.get('/memory/search', { params: { q } })
+
+// Auth setup (crear carpetas y memoria para nuevo usuario)
+export const authSetup = (name) => api.post('/auth/setup', { name })
 
 export default api

@@ -11,6 +11,16 @@ const useChatStore = create((set, get) => ({
   error: null,
   sidebarOpen: false,
 
+  // Auth state
+  session: null,
+  user: null,
+
+  // Actions - Auth
+  setSession: (session) => set({
+    session,
+    user: session?.user ?? null,
+  }),
+
   // Actions - Sidebar
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),

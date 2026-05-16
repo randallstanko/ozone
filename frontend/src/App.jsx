@@ -4,29 +4,67 @@ import Sidebar from './components/Sidebar/Sidebar'
 import ChatArea from './components/Chat/ChatArea'
 import NotesPanel from './components/Notes/NotesPanel'
 import SplashScreen from './components/common/SplashScreen'
+import AuthScreen from './components/Auth/AuthScreen'
 import useChatStore from './store/chatStore'
+import { supabase } from './config/supabase'
+import * as api from './services/api'
 
 function App() {
   const [view, setView] = useState('chat')
   const [dataReady, setDataReady] = useState(false)
   const [splashMounted, setSplashMounted] = useState(true)
-  const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders } = useChatStore()
+  const [authChecked, setAuthChecked] = useState(false)
+  const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders, session, setSession } = useChatStore()
 
+  // 1. Verificar sesion existente al arrancar
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s)
+      setAuthChecked(true)
+    })
+
+    // Escuchar cambios de sesion (login/logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s)
+    })
+
+    return () => subscription.unsubscribe()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 2. Cargar datos una vez que hay sesion
+  useEffect(() => {
+    if (!authChecked || !session) return
+
     const load = async () => {
       const startTime = Date.now()
       await fetchFolders()
-      // Ensure splash shows for at least 20 seconds
       const elapsed = Date.now() - startTime
       const remaining = Math.max(0, 20000 - elapsed)
       setTimeout(() => {
         setDataReady(true)
-        // Unmount after fade-out transition finishes (0.85s + buffer)
         setTimeout(() => setSplashMounted(false), 950)
       }, remaining)
     }
     load()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [authChecked, session]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Callback desde AuthScreen cuando el usuario hace login/register
+  const handleAuth = async (newSession) => {
+    setSession(newSession)
+    // Llamar al endpoint setup para crear carpetas y memoria (idempotente)
+    try {
+      const name = newSession.user?.user_metadata?.full_name || newSession.user?.email
+      await api.authSetup(name)
+    } catch {
+      // El setup falla si ya existe — es normal
+    }
+  }
+
+  // Mientras verificamos la sesion, no renderizar nada (evitar flash)
+  if (!authChecked) return null
+
+  // Sin sesion → mostrar pantalla de login
+  if (!session) return <AuthScreen onAuth={handleAuth} />
 
   return (
     <>
@@ -46,7 +84,7 @@ function App() {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* Mobile top bar with hamburger — sticky, never scrolls away */}
+          {/* Mobile top bar with hamburger */}
           <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-3 border-b border-dark-800 bg-dark-950 md:hidden shrink-0">
             <button
               onClick={toggleSidebar}

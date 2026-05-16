@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
-import { MessageSquare, Brain, FolderPlus } from 'lucide-react'
+import { MessageSquare, Brain, FolderPlus, LogOut } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import FolderItem from './FolderItem'
+import { supabase } from '../../config/supabase'
 
 export default function Sidebar({ currentView, onViewChange }) {
-  const { folders, activeFolder, fetchFolders, setActiveFolder, createFolder, sidebarOpen, closeSidebar } = useChatStore()
+  const { folders, activeFolder, fetchFolders, setActiveFolder, createFolder, sidebarOpen, closeSidebar, user } = useChatStore()
   const [showNewFolder, setShowNewFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
 
   useEffect(() => {
     fetchFolders()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreateFolder = async (e) => {
     e.preventDefault()
@@ -25,6 +26,13 @@ export default function Sidebar({ currentView, onViewChange }) {
     onViewChange('chat')
     closeSidebar()
   }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario'
+  const displayEmail = user?.email || ''
 
   return (
     <aside
@@ -99,7 +107,7 @@ export default function Sidebar({ currentView, onViewChange }) {
       )}
 
       {/* Bottom Actions */}
-      <div className="p-3 border-t border-dark-800">
+      <div className="p-3 border-t border-dark-800 space-y-1">
         <button
           onClick={() => setShowNewFolder(true)}
           className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-dark-300 hover:text-white hover:bg-dark-800 transition-all"
@@ -107,6 +115,29 @@ export default function Sidebar({ currentView, onViewChange }) {
           <FolderPlus size={18} />
           Nueva carpeta
         </button>
+
+        {/* User info + logout */}
+        {user && (
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-dark-900 mt-2">
+            {/* Avatar */}
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-ozone-primary to-ozone-secondary flex items-center justify-center text-white text-xs font-bold shrink-0">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+            {/* Name + email */}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-dark-200 truncate">{displayName}</p>
+              <p className="text-xs text-dark-500 truncate">{displayEmail}</p>
+            </div>
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              title="Cerrar sesion"
+              className="text-dark-500 hover:text-red-400 transition-colors shrink-0"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   )

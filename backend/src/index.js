@@ -9,6 +9,7 @@ const messagesRouter = require('./routes/messages');
 const chatRouter = require('./routes/chat');
 const notesRouter = require('./routes/notes');
 const memoryRouter = require('./routes/memory');
+const authRouter = require('./routes/auth');
 const { errorHandler } = require('./middleware/errorHandler');
 const { authMiddleware } = require('./middleware/auth');
 
@@ -41,6 +42,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(authMiddleware);
 
 // Routes
+app.use('/api/auth', authRouter);
 app.use('/api/folders', foldersRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/chat', chatRouter);
