@@ -24,8 +24,17 @@ function App() {
     })
 
     // Escuchar cambios de sesion (login/logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       setSession(s)
+      // Si es un login nuevo (Google OAuth redirect), hacer setup
+      if (s && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
+        try {
+          const name = s.user?.user_metadata?.full_name || s.user?.email
+          await api.authSetup(name)
+        } catch {
+          // Setup ya existe — normal
+        }
+      }
     })
 
     return () => subscription.unsubscribe()
