@@ -14,35 +14,51 @@ function App() {
   const [dataReady, setDataReady] = useState(false)
   const [splashMounted, setSplashMounted] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
+  const [setupDone, setSetupDone] = useState(false)
   const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders, session, setSession } = useChatStore()
 
   // 1. Verificar sesion existente al arrancar
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       setSession(s)
-      setAuthChecked(true)
-    })
-
-    // Escuchar cambios de sesion (login/logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
-      setSession(s)
-      // Si es un login nuevo (Google OAuth redirect), hacer setup
-      if (s && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
+      if (s) {
+        // Hacer setup antes de marcar auth como checked
         try {
           const name = s.user?.user_metadata?.full_name || s.user?.email
           await api.authSetup(name)
         } catch {
           // Setup ya existe — normal
         }
+        setSetupDone(true)
+      }
+      setAuthChecked(true)
+    })
+
+    // Escuchar cambios de sesion (login/logout/token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
+      setSession(s)
+      if (s && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
+        try {
+          const name = s.user?.user_metadata?.full_name || s.user?.email
+          await api.authSetup(name)
+        } catch {
+          // normal
+        }
+        setSetupDone(true)
+      }
+      if (!s) {
+        setSetupDone(false)
+        setDataReady(false)
+        setSplashMounted(true)
       }
     })
 
     return () => subscription.unsubscribe()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 2. Cargar datos una vez que hay sesion
+  // 2. Cargar datos DESPUES de que el setup haya creado las carpetas
   useEffect(() => {
-    if (!authChecked || !session) return
+    if (!authChecked || !session || !setupDone) return
 
     const load = async () => {
       const startTime = Date.now()
@@ -55,18 +71,18 @@ function App() {
       }, remaining)
     }
     load()
-  }, [authChecked, session]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [authChecked, session, setupDone]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Callback desde AuthScreen cuando el usuario hace login/register
+  // Callback desde AuthScreen cuando el usuario hace login/register con email
   const handleAuth = async (newSession) => {
     setSession(newSession)
-    // Llamar al endpoint setup para crear carpetas y memoria (idempotente)
     try {
       const name = newSession.user?.user_metadata?.full_name || newSession.user?.email
       await api.authSetup(name)
     } catch {
-      // El setup falla si ya existe — es normal
+      // normal
     }
+    setSetupDone(true)
   }
 
   // Mientras verificamos la sesion, no renderizar nada (evitar flash)
