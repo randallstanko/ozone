@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { Brain } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import MessageBubble from './MessageBubble'
 import ChatInput from './ChatInput'
@@ -9,8 +8,6 @@ export default function ChatArea() {
   const messagesEndRef = useRef(null)
   const isFirstRender = useRef(true)
 
-  // Scroll to bottom on every messages change.
-  // Use 'instant' on first render so the initial load doesn't animate from top.
   useEffect(() => {
     const behavior = isFirstRender.current ? 'instant' : 'smooth'
     isFirstRender.current = false
@@ -18,29 +15,85 @@ export default function ChatArea() {
   }, [messages])
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Desktop folder header (hidden on mobile — mobile header is in App.jsx) */}
-      <header className="h-14 border-b border-dark-800 flex items-center px-6 shrink-0 hidden md:flex">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#212121' }}>
+      {/* Desktop header */}
+      <header
+        className="hidden md:flex"
+        style={{
+          height: '52px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 1.5rem',
+          flexShrink: 0,
+          background: '#212121',
+        }}
+      >
         {activeFolder && (
-          <div className="flex items-center gap-3">
-            <span className="text-xl">{activeFolder.icon}</span>
-            <h2 className="font-semibold text-white">{activeFolder.name}</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontSize: '1.1rem' }}>{activeFolder.icon}</span>
+            <h2 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0 }}>
+              {activeFolder.name}
+            </h2>
           </div>
         )}
       </header>
 
-      {/* Messages — only this area scrolls */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 space-y-4">
+      {/* Messages scroll area */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
+          padding: '1.5rem 1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0',
+        }}
+      >
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ozone-primary"></div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <div style={{
+              width: '28px', height: '28px', borderRadius: '50%',
+              border: '2px solid rgba(255,255,255,0.1)',
+              borderTopColor: '#6366f1',
+              animation: 'spin 0.8s linear infinite',
+            }} />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-dark-400">
-            <Brain size={48} className="mb-4 text-dark-600" />
-            <p className="text-lg font-medium">Comienza una conversacion</p>
-            <p className="text-sm mt-1">
-              Escribe algo y Ozone recordara todo por ti
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            gap: '0.75rem',
+            userSelect: 'none',
+          }}>
+            <div style={{
+              width: '44px', height: '44px', borderRadius: '50%',
+              background: 'rgba(99,102,241,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="3" fill="#6366f1" opacity="0.8"/>
+                <circle cx="4"  cy="8"  r="2" fill="#8b5cf6" opacity="0.5"/>
+                <circle cx="20" cy="8"  r="2" fill="#8b5cf6" opacity="0.5"/>
+                <circle cx="4"  cy="16" r="2" fill="#06b6d4" opacity="0.4"/>
+                <circle cx="20" cy="16" r="2" fill="#06b6d4" opacity="0.4"/>
+                <line x1="12" y1="12" x2="4"  y2="8"  stroke="#6366f1" strokeWidth="0.8" opacity="0.3"/>
+                <line x1="12" y1="12" x2="20" y2="8"  stroke="#6366f1" strokeWidth="0.8" opacity="0.3"/>
+                <line x1="12" y1="12" x2="4"  y2="16" stroke="#06b6d4" strokeWidth="0.8" opacity="0.3"/>
+                <line x1="12" y1="12" x2="20" y2="16" stroke="#06b6d4" strokeWidth="0.8" opacity="0.3"/>
+              </svg>
+            </div>
+            <p style={{ fontSize: '1rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+              {activeFolder ? `Hola, soy Ozone` : 'Selecciona una carpeta'}
+            </p>
+            <p style={{ fontSize: '0.83rem', color: 'rgba(255,255,255,0.28)', margin: 0, textAlign: 'center', maxWidth: '280px', lineHeight: 1.5 }}>
+              {activeFolder
+                ? 'Escribe algo para empezar. Recuerdo todo lo que me contás.'
+                : 'Elige una carpeta de la sidebar para comenzar a chatear.'}
             </p>
           </div>
         ) : (
@@ -49,24 +102,53 @@ export default function ChatArea() {
               <MessageBubble key={msg.id} message={msg} />
             ))}
             {isSending && (
-              <div className="chat-bubble-ia">
-                <div className="flex gap-1.5">
-                  <div className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              <div style={{ maxWidth: '720px', width: '100%', margin: '0 auto', padding: '1rem 0' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                  {/* Ozone icon */}
+                  <div style={{
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    background: 'rgba(99,102,241,0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="3" fill="#6366f1" opacity="0.9"/>
+                      <circle cx="4"  cy="8"  r="2" fill="#8b5cf6" opacity="0.6"/>
+                      <circle cx="20" cy="8"  r="2" fill="#8b5cf6" opacity="0.6"/>
+                      <line x1="12" y1="12" x2="4"  y2="8"  stroke="#6366f1" strokeWidth="1" opacity="0.5"/>
+                      <line x1="12" y1="12" x2="20" y2="8"  stroke="#6366f1" strokeWidth="1" opacity="0.5"/>
+                    </svg>
+                  </div>
+                  {/* Typing dots */}
+                  <div style={{ display: 'flex', gap: '5px', paddingTop: '6px' }}>
+                    {[0, 150, 300].map((delay, i) => (
+                      <div key={i} style={{
+                        width: '7px', height: '7px', borderRadius: '50%',
+                        background: 'rgba(255,255,255,0.35)',
+                        animation: 'typing-dot 1.2s ease-in-out infinite',
+                        animationDelay: `${delay}ms`,
+                      }} />
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
           </>
         )}
-        {/* Scroll anchor — always at the bottom */}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input — flex-none keeps it pinned, never scrolls */}
-      <div className="shrink-0">
+      {/* Chat input */}
+      <div style={{ flexShrink: 0 }}>
         <ChatInput />
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes typing-dot {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+          40% { transform: scale(1.1); opacity: 0.9; }
+        }
+      `}</style>
     </div>
   )
 }

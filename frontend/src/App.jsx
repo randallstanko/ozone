@@ -15,7 +15,7 @@ function App() {
   const [splashMounted, setSplashMounted] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
   const [setupDone, setSetupDone] = useState(false)
-  const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders, session, setSession } = useChatStore()
+  const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders, session, setSession, activeFolder } = useChatStore()
 
   // 1. Verificar sesion existente al arrancar
   useEffect(() => {
@@ -23,7 +23,6 @@ function App() {
       console.log('[Auth] getSession result:', s ? `user=${s.user?.email}` : 'no session')
       setSession(s)
       if (s) {
-        // Hacer setup antes de marcar auth como checked
         try {
           const name = s.user?.user_metadata?.full_name || s.user?.email
           await api.authSetup(name)
@@ -36,7 +35,6 @@ function App() {
       setAuthChecked(true)
     })
 
-    // Escuchar cambios de sesion (login/logout/token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       console.log('[Auth] onAuthStateChange event:', _event, s ? `user=${s.user?.email}` : 'no session')
       setSession(s)
@@ -80,7 +78,6 @@ function App() {
     load()
   }, [authChecked, session, setupDone]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Callback desde AuthScreen cuando el usuario hace login/register con email
   const handleAuth = async (newSession) => {
     setSession(newSession)
     try {
@@ -92,21 +89,27 @@ function App() {
     setSetupDone(true)
   }
 
-  // Mientras verificamos la sesion, no renderizar nada (evitar flash)
   if (!authChecked) return null
 
-  // Sin sesion → mostrar pantalla de login
   if (!session) return <AuthScreen onAuth={handleAuth} />
 
   return (
     <>
+      {/* Splash — white, fades out to reveal dark chat */}
       {splashMounted && <SplashScreen visible={!dataReady} />}
 
-      <div className="flex h-full overflow-hidden">
-        {/* Mobile overlay backdrop */}
+      <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#212121' }}>
+        {/* Mobile backdrop */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-black/50 md:hidden"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 30,
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(2px)',
+            }}
+            className="md:hidden"
             onClick={closeSidebar}
           />
         )}
@@ -114,19 +117,33 @@ function App() {
         {/* Sidebar */}
         <Sidebar currentView={view} onViewChange={setView} />
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* Mobile top bar with hamburger */}
-          <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-3 border-b border-dark-800 bg-dark-950 md:hidden shrink-0">
+        {/* Main content */}
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+          {/* Mobile top bar */}
+          <div
+            className="md:hidden"
+            style={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 50,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: '0.7rem 1rem',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              background: '#212121',
+              flexShrink: 0,
+            }}
+          >
             <button
               onClick={toggleSidebar}
-              className="text-dark-300 hover:text-white transition-colors"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.55)', padding: '2px', display: 'flex' }}
               aria-label="Abrir menu"
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
-            <span className="text-base font-bold bg-gradient-to-r from-ozone-primary to-ozone-secondary bg-clip-text text-transparent">
-              Ozone
+            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.06em' }}>
+              {activeFolder ? activeFolder.name : 'Ozone'}
             </span>
           </div>
 

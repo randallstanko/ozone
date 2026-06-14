@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,45 +12,67 @@
     width: 100%;
     overflow: hidden;
     position: fixed;
-    /* Prevent iOS bounce / viewport shift */
     overscroll-behavior: none;
   }
 
   body {
-    @apply bg-dark-900 text-gray-100 font-sans antialiased;
+    background: #212121;
+    color: rgba(255, 255, 255, 0.88);
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Scrollbar — ultra thin, subtle */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-dark-900;
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-dark-600 rounded-full;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-dark-500;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  /* Textarea placeholder */
+  textarea::placeholder {
+    color: rgba(255, 255, 255, 0.25);
   }
 }
 
 @layer components {
+  /* Sidebar folder items — hover state via JS now, but keep base */
   .sidebar-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 text-gray-300 hover:text-white hover:bg-dark-700;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 text-gray-400 hover:text-white;
   }
 
   .sidebar-item-active {
-    @apply bg-dark-700 text-white;
+    color: white;
   }
 
+  /* FolderItem menu button — show on parent hover */
+  .folder-item-gpt:hover .folder-menu-btn {
+    opacity: 1 !important;
+  }
+
+  /* Legacy chat bubbles kept for any residual usage */
   .chat-bubble-user {
-    @apply bg-ozone-primary/20 border border-ozone-primary/30 rounded-2xl rounded-br-md px-4 py-3 max-w-[80%] ml-auto;
+    background: rgba(42, 42, 42, 0.9);
+    border-radius: 1.2rem 1.2rem 0.25rem 1.2rem;
+    padding: 0.7rem 1rem;
+    max-width: 75%;
+    margin-left: auto;
   }
 
   .chat-bubble-ia {
-    @apply bg-dark-800 border border-dark-700 rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%];
+    padding: 0.3rem 0;
+    max-width: 100%;
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MessageSquare, Brain, FolderPlus, LogOut } from 'lucide-react'
+import { MessageSquare, Brain, Plus, LogOut } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import FolderItem from './FolderItem'
 import { supabase } from '../../config/supabase'
@@ -33,52 +33,114 @@ export default function Sidebar({ currentView, onViewChange }) {
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario'
   const displayEmail = user?.email || ''
+  const avatarInitial = displayName.charAt(0).toUpperCase()
 
   return (
     <aside
       className={`
-        fixed inset-y-0 left-0 z-40 w-72 bg-dark-950 border-r border-dark-800 flex flex-col h-full
+        fixed inset-y-0 left-0 z-40 flex flex-col h-full
         transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0 md:z-auto
       `}
+      style={{
+        width: '260px',
+        background: '#171717',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+      }}
     >
-      {/* Header */}
-      <div className="p-4 border-b border-dark-800">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-ozone-primary to-ozone-secondary bg-clip-text text-transparent">
-          Ozone
-        </h1>
-        <p className="text-xs text-dark-400 mt-1">Tu segundo cerebro con IA</p>
+      {/* Brand header */}
+      <div style={{ padding: '1rem 1rem 0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+          <span style={{ fontSize: '1.15rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.08em' }}>
+            Ozone
+          </span>
+        </div>
+
+        {/* New folder button — like ChatGPT "New chat" */}
+        <button
+          onClick={() => setShowNewFolder(true)}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            padding: '0.55rem 0.75rem',
+            borderRadius: '0.65rem',
+            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'transparent',
+            color: 'rgba(255,255,255,0.75)',
+            fontSize: '0.85rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#ffffff' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)' }}
+        >
+          <Plus size={15} />
+          Nueva carpeta
+        </button>
       </div>
 
-      {/* View Toggle */}
-      <div className="flex p-2 gap-1 mx-2 mt-2 bg-dark-900 rounded-lg">
+      {/* View toggle */}
+      <div style={{ padding: '0.5rem 0.75rem', display: 'flex', gap: '2px' }}>
         <button
           onClick={() => { onViewChange('chat'); closeSidebar() }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
-            currentView === 'chat'
-              ? 'bg-dark-700 text-white'
-              : 'text-dark-400 hover:text-dark-200'
-          }`}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.4rem',
+            padding: '0.45rem 0.5rem',
+            borderRadius: '0.55rem',
+            border: 'none',
+            fontSize: '0.8rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            transition: 'all 0.15s',
+            background: currentView === 'chat' ? 'rgba(255,255,255,0.1)' : 'transparent',
+            color: currentView === 'chat' ? '#ffffff' : 'rgba(255,255,255,0.45)',
+          }}
         >
-          <MessageSquare size={16} />
+          <MessageSquare size={14} />
           Chat
         </button>
         <button
           onClick={() => { onViewChange('notes'); closeSidebar() }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
-            currentView === 'notes'
-              ? 'bg-dark-700 text-white'
-              : 'text-dark-400 hover:text-dark-200'
-          }`}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.4rem',
+            padding: '0.45rem 0.5rem',
+            borderRadius: '0.55rem',
+            border: 'none',
+            fontSize: '0.8rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            transition: 'all 0.15s',
+            background: currentView === 'notes' ? 'rgba(255,255,255,0.1)' : 'transparent',
+            color: currentView === 'notes' ? '#ffffff' : 'rgba(255,255,255,0.45)',
+          }}
         >
-          <Brain size={16} />
+          <Brain size={14} />
           Cerebro
         </button>
       </div>
 
-      {/* Folders List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      {/* Section label */}
+      <div style={{ padding: '0.75rem 1rem 0.35rem', fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        Carpetas
+      </div>
+
+      {/* Folders list */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 0.5rem' }}>
         {folders.map((folder) => (
           <FolderItem
             key={folder.id}
@@ -89,56 +151,75 @@ export default function Sidebar({ currentView, onViewChange }) {
         ))}
       </div>
 
-      {/* New Folder Form */}
+      {/* New folder input */}
       {showNewFolder && (
-        <form onSubmit={handleCreateFolder} className="px-3 pb-2">
+        <form onSubmit={handleCreateFolder} style={{ padding: '0 0.75rem 0.5rem' }}>
           <input
             type="text"
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             placeholder="Nombre de la carpeta..."
-            className="w-full bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-white placeholder-dark-400 focus:outline-none focus:border-ozone-primary"
-            autoFocus
-            onBlur={() => {
-              if (!newFolderName.trim()) setShowNewFolder(false)
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '0.6rem',
+              padding: '0.6rem 0.85rem',
+              fontSize: '0.85rem',
+              color: '#ffffff',
+              outline: 'none',
+              fontFamily: 'inherit',
             }}
+            autoFocus
+            onBlur={() => { if (!newFolderName.trim()) setShowNewFolder(false) }}
           />
         </form>
       )}
 
-      {/* Bottom Actions */}
-      <div className="p-3 border-t border-dark-800 space-y-1">
-        <button
-          onClick={() => setShowNewFolder(true)}
-          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-dark-300 hover:text-white hover:bg-dark-800 transition-all"
-        >
-          <FolderPlus size={18} />
-          Nueva carpeta
-        </button>
-
-        {/* User info + logout */}
-        {user && (
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-dark-900 mt-2">
-            {/* Avatar */}
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-ozone-primary to-ozone-secondary flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-            {/* Name + email */}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-dark-200 truncate">{displayName}</p>
-              <p className="text-xs text-dark-500 truncate">{displayEmail}</p>
-            </div>
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              title="Cerrar sesion"
-              className="text-dark-500 hover:text-red-400 transition-colors shrink-0"
-            >
-              <LogOut size={16} />
-            </button>
+      {/* User info + logout */}
+      {user && (
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          padding: '0.75rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.6rem',
+        }}>
+          <div style={{
+            width: '30px',
+            height: '30px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            flexShrink: 0,
+          }}>
+            {avatarInitial}
           </div>
-        )}
-      </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {displayName}
+            </p>
+            <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {displayEmail}
+            </p>
+          </div>
+          <button
+            onClick={handleLogout}
+            title="Cerrar sesion"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', padding: '4px', borderRadius: '6px', display: 'flex', flexShrink: 0, transition: 'color 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
+          >
+            <LogOut size={15} />
+          </button>
+        </div>
+      )}
     </aside>
   )
 }

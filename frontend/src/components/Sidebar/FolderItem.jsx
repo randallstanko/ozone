@@ -35,12 +35,23 @@ export default function FolderItem({ folder, isActive, onClick }) {
 
   if (isRenaming) {
     return (
-      <form onSubmit={handleRename} className="px-1">
+      <form onSubmit={handleRename} style={{ padding: '2px 4px' }}>
         <input
           type="text"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          className="w-full bg-dark-800 border border-ozone-primary rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            background: 'rgba(255,255,255,0.08)',
+            border: '1px solid #6366f1',
+            borderRadius: '0.5rem',
+            padding: '0.5rem 0.75rem',
+            fontSize: '0.85rem',
+            color: '#ffffff',
+            outline: 'none',
+            fontFamily: 'inherit',
+          }}
           autoFocus
           onBlur={handleRename}
         />
@@ -50,46 +61,118 @@ export default function FolderItem({ folder, isActive, onClick }) {
 
   return (
     <div
-      className={`sidebar-item group relative ${isActive ? 'sidebar-item-active' : ''}`}
       onClick={onClick}
+      className="folder-item-gpt"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.6rem',
+        padding: '0.55rem 0.75rem',
+        borderRadius: '0.65rem',
+        cursor: 'pointer',
+        position: 'relative',
+        transition: 'background 0.15s',
+        background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+        marginBottom: '2px',
+      }}
+      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.055)' }}
+      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
     >
-      <span className="text-lg">{folder.icon}</span>
-      <span className="flex-1 text-sm truncate">{folder.name}</span>
+      <span style={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>{folder.icon}</span>
+      <span style={{
+        flex: 1,
+        fontSize: '0.85rem',
+        color: isActive ? '#ffffff' : 'rgba(255,255,255,0.65)',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        fontWeight: isActive ? 500 : 400,
+      }}>
+        {folder.name}
+      </span>
 
-      {/* Menu 3 puntos */}
+      {/* 3-dot menu */}
       {!folder.is_general && (
-        <div className="relative" ref={menuRef}>
+        <div
+          className="folder-menu-wrap"
+          ref={menuRef}
+          style={{ position: 'relative', flexShrink: 0 }}
+          onClick={e => e.stopPropagation()}
+        >
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowMenu(!showMenu)
+            onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu) }}
+            className="folder-menu-btn"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'rgba(255,255,255,0.3)',
+              padding: '2px',
+              borderRadius: '4px',
+              display: 'flex',
+              opacity: 0,
+              transition: 'opacity 0.15s, color 0.15s',
             }}
-            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-dark-600 transition-opacity"
           >
-            <MoreVertical size={14} />
+            <MoreVertical size={13} />
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 w-40 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-50 overflow-hidden">
+            <div style={{
+              position: 'absolute',
+              right: 0,
+              top: '100%',
+              marginTop: '4px',
+              width: '150px',
+              background: '#2a2a2a',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '0.65rem',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+              zIndex: 50,
+              overflow: 'hidden',
+            }}>
               <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsRenaming(true)
-                  setShowMenu(false)
+                onClick={(e) => { e.stopPropagation(); setIsRenaming(true); setShowMenu(false) }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.6rem 0.85rem',
+                  fontSize: '0.82rem',
+                  color: 'rgba(255,255,255,0.75)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  textAlign: 'left',
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-dark-700 hover:text-white"
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >
-                <Pencil size={14} />
+                <Pencil size={13} />
                 Renombrar
               </button>
               <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDelete()
+                onClick={(e) => { e.stopPropagation(); handleDelete() }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.6rem 0.85rem',
+                  fontSize: '0.82rem',
+                  color: '#f87171',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  textAlign: 'left',
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-dark-700 hover:text-red-300"
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >
-                <Trash2 size={14} />
+                <Trash2 size={13} />
                 Eliminar
               </button>
             </div>

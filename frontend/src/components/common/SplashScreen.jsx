@@ -3,32 +3,32 @@ import './SplashScreen.css'
 
 const PHRASES = [
   {
-    main: 'Estoy recordando todo lo que alguna vez me dijiste.',
-    sub: 'Cada conversación, cada idea, cada decisión que tomaste. Todo está acá.'
+    main: 'Tu segundo cerebro con inteligencia artificial.',
+    sub: 'Recuerda todo lo que le contás, para siempre.'
   },
   {
-    main: 'Tu segundo cerebro está despertando.',
-    sub: 'Ozone recuerda lo que vos olvidás. Tus metas, tus problemas, tus avances.'
+    main: 'Sabe el contexto de cada conversacion que tuviste.',
+    sub: 'No es un chatbot. Es alguien que te conoce de verdad.'
   },
   {
-    main: 'No soy un chatbot. Soy tu conciencia digital.',
-    sub: 'Contame lo que quieras: finanzas, relaciones, proyectos, emociones, estudio, salud.'
+    main: 'Te ayuda a pensar y tomar mejores decisiones.',
+    sub: 'Con toda tu historia disponible, cada respuesta es mas precisa.'
   },
   {
-    main: 'Conozco tu historia completa.',
-    sub: 'Uso todo lo que me contaste para ayudarte a pensar mejor y tomar mejores decisiones.'
+    main: 'Tu memoria perfecta, siempre disponible.',
+    sub: 'Proyectos, metas, emociones, finanzas. Todo organizado y accesible.'
   },
   {
-    main: 'Soy tu agenda viva.',
-    sub: 'No solo guardo información. Conecto tus ideas, detecto patrones y te recuerdo lo importante.'
+    main: 'Aprende de vos y se adapta con el tiempo.',
+    sub: 'Cuanto mas le contas, mejor te acompana.'
   },
   {
-    main: 'Todo lo que me digas queda para siempre.',
-    sub: 'Tu memoria no tiene límite. Mientras más me cuentes, mejor te puedo acompañar.'
+    main: 'Pensa mejor con quien te conoce de verdad.',
+    sub: 'Un asistente que recuerda tu historia completa y la usa para ayudarte.'
   },
   {
-    main: 'Preparando el contexto de toda tu vida.',
-    sub: 'Revisando tus emociones, proyectos, finanzas, relaciones, metas y aprendizajes.'
+    main: 'Todo lo que compartas queda registrado con proposito.',
+    sub: 'No almacena datos. Construye contexto para que puedas crecer.'
   },
 ]
 
@@ -39,7 +39,6 @@ export default function SplashScreen({ visible }) {
   const [phraseIn, setPhraseIn] = useState(true)
   const [elapsed, setElapsed] = useState(0)
 
-  // Rotate phrases every 4s with fade transition
   useEffect(() => {
     const id = setInterval(() => {
       setPhraseIn(false)
@@ -51,7 +50,6 @@ export default function SplashScreen({ visible }) {
     return () => clearInterval(id)
   }, [])
 
-  // Track elapsed seconds for slow-backend message
   useEffect(() => {
     const id = setInterval(() => setElapsed((e) => e + 1), 1000)
     return () => clearInterval(id)
@@ -60,17 +58,17 @@ export default function SplashScreen({ visible }) {
   return (
     <div className={`splash-screen${!visible ? ' splash-hidden' : ''}`}>
 
-      {/* === Floating neurons background === */}
+      {/* Floating neurons background */}
       <div className="splash-neurons" aria-hidden>
         {NEURONS.map((_, i) => (
           <span key={i} className="neuron" style={{ '--i': i }} />
         ))}
       </div>
 
-      {/* === Radial glow overlay === */}
+      {/* Subtle gradient overlay */}
       <div className="splash-glow-bg" aria-hidden />
 
-      {/* === Orbit rings + title === */}
+      {/* Orbit rings */}
       <div className="splash-orbit-wrap" aria-hidden>
         <div className="orbit orbit-1" />
         <div className="orbit orbit-2" />
@@ -78,31 +76,29 @@ export default function SplashScreen({ visible }) {
       </div>
 
       <div className="splash-center">
-        {/* Pulse ring behind title */}
         <div className="splash-pulse-ring" aria-hidden />
         <div className="splash-pulse-ring splash-pulse-ring-2" aria-hidden />
         <h1 className="splash-title">OZONE</h1>
-        <p className="splash-subtitle">tu segundo cerebro</p>
+        <p className="splash-subtitle">inteligencia con memoria</p>
       </div>
 
-      {/* === Rotating phrases === */}
+      {/* Rotating phrases */}
       <div className={`splash-phrase-block${phraseIn ? ' phrase-in' : ' phrase-out'}`}>
         <p className="splash-phrase-main">{PHRASES[phraseIndex].main}</p>
         <p className="splash-phrase-sub">{PHRASES[phraseIndex].sub}</p>
       </div>
 
-      {/* === Progress dots === */}
+      {/* Progress dots */}
       <div className="splash-dots" aria-hidden>
         <span className="dot dot-1" />
         <span className="dot dot-2" />
         <span className="dot dot-3" />
       </div>
 
-      {/* === Slow-backend message === */}
       {elapsed >= 30 && (
         <p className="splash-slow">
           {elapsed >= 60
-            ? 'Ozone está despertando, un momento más...'
+            ? 'Ozone esta despertando, un momento mas...'
             : 'Casi listo...'}
         </p>
       )}
