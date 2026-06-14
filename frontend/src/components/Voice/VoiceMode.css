@@ -1,0 +1,256 @@
+/* ===== VoiceMode Overlay ===== */
+.voice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1rem 2.5rem;
+  animation: voice-fadein 0.25s ease;
+}
+
+@keyframes voice-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ===== Top bar ===== */
+.voice-top-bar {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.voice-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.voice-top-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.voice-btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.voice-btn-icon:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.voice-btn-icon--active {
+  background: rgba(239, 68, 68, 0.18);
+  color: #ef4444;
+}
+
+/* ===== Center section ===== */
+.voice-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+/* ===== Orb ===== */
+.voice-orb {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-orb-inner {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.15s ease;
+}
+
+/* Idle state */
+.voice-orb--idle .voice-orb-inner {
+  background: radial-gradient(circle at 35% 35%, #4f46e5, #1e1b4b);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.25), inset 0 1px 1px rgba(255,255,255,0.15);
+}
+
+.voice-orb--idle:hover .voice-orb-inner {
+  transform: scale(1.06);
+  box-shadow: 0 0 60px rgba(99, 102, 241, 0.4), inset 0 1px 1px rgba(255,255,255,0.15);
+}
+
+/* Listening state — blue/indigo pulsing */
+.voice-orb--listening .voice-orb-inner {
+  background: radial-gradient(circle at 35% 35%, #818cf8, #4f46e5);
+  box-shadow: 0 0 60px rgba(99, 102, 241, 0.6), inset 0 1px 1px rgba(255,255,255,0.2);
+  animation: orb-pulse-listen 1.8s ease-in-out infinite;
+}
+
+/* Thinking state — neutral dim */
+.voice-orb--thinking .voice-orb-inner {
+  background: radial-gradient(circle at 35% 35%, #6b7280, #374151);
+  box-shadow: 0 0 30px rgba(107, 114, 128, 0.3);
+  animation: orb-breathe 2s ease-in-out infinite;
+}
+
+/* Speaking state — violet/purple */
+.voice-orb--speaking .voice-orb-inner {
+  background: radial-gradient(circle at 35% 35%, #c084fc, #7c3aed);
+  box-shadow: 0 0 70px rgba(139, 92, 246, 0.65), inset 0 1px 1px rgba(255,255,255,0.2);
+  animation: orb-pulse-speak 1.2s ease-in-out infinite;
+}
+
+/* Error state */
+.voice-orb--error .voice-orb-inner {
+  background: radial-gradient(circle at 35% 35%, #f87171, #b91c1c);
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.4);
+}
+
+/* ===== Animations ===== */
+@keyframes orb-pulse-listen {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 60px rgba(99, 102, 241, 0.5); }
+  50%       { transform: scale(1.08); box-shadow: 0 0 90px rgba(99, 102, 241, 0.8); }
+}
+
+@keyframes orb-pulse-speak {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 70px rgba(139, 92, 246, 0.55); }
+  50%       { transform: scale(1.1);  box-shadow: 0 0 110px rgba(139, 92, 246, 0.85); }
+}
+
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.04); }
+}
+
+/* ===== Ripple rings ===== */
+.voice-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid;
+  pointer-events: none;
+  animation: ring-expand 2s ease-out infinite;
+}
+
+.voice-orb--listening .voice-ring { border-color: rgba(99, 102, 241, 0.5); }
+.voice-orb--speaking  .voice-ring { border-color: rgba(139, 92, 246, 0.5); }
+
+.voice-ring--1 { width: 110px; height: 110px; animation-delay: 0s; }
+.voice-ring--2 { width: 130px; height: 130px; animation-delay: 0.6s; }
+.voice-ring--3 { width: 150px; height: 150px; animation-delay: 1.2s; }
+
+@keyframes ring-expand {
+  0%   { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* ===== Thinking dots ===== */
+.voice-thinking-dots {
+  position: absolute;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.voice-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
+  40%            { transform: scale(1.2); opacity: 1; }
+}
+
+/* ===== Status text ===== */
+.voice-status {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0.01em;
+  transition: color 0.3s;
+  min-height: 1.5em;
+}
+
+/* ===== Stop/pause button ===== */
+.voice-stop-btn {
+  padding: 0.55rem 1.5rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  letter-spacing: 0.03em;
+}
+
+.voice-stop-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ===== Bottom hint ===== */
+.voice-hint {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.22);
+  margin: 0;
+  text-align: center;
+  min-height: 1.2em;
+  transition: color 0.3s;
+}
+
+/* ===== Mobile adjustments ===== */
+@media (max-width: 480px) {
+  .voice-orb {
+    width: 120px;
+    height: 120px;
+  }
+
+  .voice-orb-inner {
+    width: 88px;
+    height: 88px;
+  }
+
+  .voice-ring--1 { width: 95px;  height: 95px; }
+  .voice-ring--2 { width: 112px; height: 112px; }
+  .voice-ring--3 { width: 130px; height: 130px; }
+
+  .voice-status {
+    font-size: 0.95rem;
+  }
+}

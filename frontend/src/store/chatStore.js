@@ -98,7 +98,7 @@ const useChatStore = create((set, get) => ({
 
   sendMessage: async (content) => {
     const { activeFolder } = get()
-    if (!activeFolder) return
+    if (!activeFolder) return null
 
     // Agregar mensaje del usuario optimisticamente
     const userMessage = {
@@ -130,6 +130,9 @@ const useChatStore = create((set, get) => ({
         ],
         isSending: false,
       }))
+
+      // Devolver el texto de la respuesta IA (para VoiceMode TTS)
+      return data.aiMessage?.content || null
     } catch (err) {
       // Si falla el chat pipeline, guardar como mensaje simple
       try {
@@ -147,6 +150,7 @@ const useChatStore = create((set, get) => ({
       } catch (innerErr) {
         set({ error: innerErr.message, isSending: false })
       }
+      return null
     }
   },
 }))

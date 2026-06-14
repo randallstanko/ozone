@@ -1,10 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Mic2 } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import MessageBubble from './MessageBubble'
 import ChatInput from './ChatInput'
+import VoiceMode from '../Voice/VoiceMode'
 
 export default function ChatArea() {
   const { messages, activeFolder, isLoading, isSending } = useChatStore()
+  const [voiceOpen, setVoiceOpen] = useState(false)
   const messagesEndRef = useRef(null)
   const isFirstRender = useRef(true)
 
@@ -16,6 +19,9 @@ export default function ChatArea() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#212121' }}>
+      {/* Voice mode overlay */}
+      {voiceOpen && <VoiceMode onClose={() => setVoiceOpen(false)} />}
+
       {/* Desktop header */}
       <header
         className="hidden md:flex"
@@ -24,6 +30,7 @@ export default function ChatArea() {
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           padding: '0 1.5rem',
           flexShrink: 0,
           background: '#212121',
@@ -36,6 +43,30 @@ export default function ChatArea() {
               {activeFolder.name}
             </h2>
           </div>
+        )}
+        {/* Voice mode button — desktop */}
+        {activeFolder && (
+          <button
+            onClick={() => setVoiceOpen(true)}
+            title="Modo voz"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(99,102,241,0.12)',
+              color: '#818cf8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'background 0.15s, box-shadow 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.22)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(99,102,241,0.35)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.12)'; e.currentTarget.style.boxShadow = 'none' }}
+          >
+            <Mic2 size={15} />
+          </button>
         )}
       </header>
 
@@ -141,6 +172,35 @@ export default function ChatArea() {
       <div style={{ flexShrink: 0 }}>
         <ChatInput />
       </div>
+
+      {/* Mobile voice FAB */}
+      {activeFolder && (
+        <button
+          className="md:hidden"
+          onClick={() => setVoiceOpen(true)}
+          aria-label="Modo voz"
+          style={{
+            position: 'fixed',
+            bottom: '88px',
+            right: '1rem',
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            border: '1px solid rgba(99,102,241,0.3)',
+            background: 'rgba(99,102,241,0.18)',
+            color: '#818cf8',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 40,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <Mic2 size={18} />
+        </button>
+      )}
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
