@@ -51,4 +51,26 @@ export const searchMemory = (q) => api.get('/memory/search', { params: { q } })
 // Auth setup (crear carpetas y memoria para nuevo usuario)
 export const authSetup = (name) => api.post('/auth/setup', { name })
 
+// Transcripción de audio (Groq Whisper)
+export const transcribeAudio = async (audioBlob) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+
+  const formData = new FormData()
+  formData.append('audio', audioBlob, 'audio.webm')
+
+  const response = await fetch(`${API_URL}/transcribe`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.error || 'Error al transcribir')
+  }
+
+  return response.json() // { text: '...' }
+}
+
 export default api

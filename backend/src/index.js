@@ -10,6 +10,7 @@ const chatRouter = require('./routes/chat');
 const notesRouter = require('./routes/notes');
 const memoryRouter = require('./routes/memory');
 const authRouter = require('./routes/auth');
+const transcribeRouter = require('./routes/transcribe');
 const { errorHandler } = require('./middleware/errorHandler');
 const { authMiddleware } = require('./middleware/auth');
 
@@ -48,6 +49,7 @@ app.use('/api/messages', messagesRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/notes', notesRouter);
 app.use('/api/memory', memoryRouter);
+app.use('/api/transcribe', transcribeRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
