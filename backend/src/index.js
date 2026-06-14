@@ -51,7 +51,19 @@ app.use('/api/memory', memoryRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'ozone-backend' });
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceKeyRole = process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? (() => { try { return JSON.parse(Buffer.from(process.env.SUPABASE_SERVICE_ROLE_KEY.split('.')[1], 'base64').toString()).role } catch { return 'parse-error' } })()
+    : 'missing';
+  res.json({
+    status: 'ok',
+    service: 'ozone-backend',
+    supabaseUrl: supabaseUrl || 'MISSING',
+    hasServiceKey,
+    serviceKeyRole,
+    nodeVersion: process.version,
+  });
 });
 
 // Error handler
