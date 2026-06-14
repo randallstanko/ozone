@@ -76,7 +76,7 @@ export default function ChatArea() {
           flex: 1,
           overflowY: 'auto',
           overscrollBehavior: 'contain',
-          padding: '1.5rem 1rem',
+          padding: '2rem 1.25rem 1rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '0',
@@ -98,34 +98,39 @@ export default function ChatArea() {
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
-            gap: '0.75rem',
+            gap: '1.25rem',
             userSelect: 'none',
           }}>
+            {/* Large orb icon */}
             <div style={{
-              width: '44px', height: '44px', borderRadius: '50%',
-              background: 'rgba(99,102,241,0.12)',
+              width: '72px', height: '72px', borderRadius: '50%',
+              background: 'radial-gradient(circle at 35% 35%, rgba(129,140,248,0.2) 0%, rgba(99,102,241,0.08) 100%)',
+              border: '1px solid rgba(99,102,241,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 40px rgba(99,102,241,0.12)',
             }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="3" fill="#6366f1" opacity="0.8"/>
-                <circle cx="4"  cy="8"  r="2" fill="#8b5cf6" opacity="0.5"/>
-                <circle cx="20" cy="8"  r="2" fill="#8b5cf6" opacity="0.5"/>
-                <circle cx="4"  cy="16" r="2" fill="#06b6d4" opacity="0.4"/>
-                <circle cx="20" cy="16" r="2" fill="#06b6d4" opacity="0.4"/>
-                <line x1="12" y1="12" x2="4"  y2="8"  stroke="#6366f1" strokeWidth="0.8" opacity="0.3"/>
-                <line x1="12" y1="12" x2="20" y2="8"  stroke="#6366f1" strokeWidth="0.8" opacity="0.3"/>
-                <line x1="12" y1="12" x2="4"  y2="16" stroke="#06b6d4" strokeWidth="0.8" opacity="0.3"/>
-                <line x1="12" y1="12" x2="20" y2="16" stroke="#06b6d4" strokeWidth="0.8" opacity="0.3"/>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="3.5" fill="#818cf8" opacity="0.9"/>
+                <circle cx="4"  cy="8"  r="2.2" fill="#a78bfa" opacity="0.65"/>
+                <circle cx="20" cy="8"  r="2.2" fill="#a78bfa" opacity="0.65"/>
+                <circle cx="4"  cy="16" r="2.2" fill="#22d3ee" opacity="0.55"/>
+                <circle cx="20" cy="16" r="2.2" fill="#22d3ee" opacity="0.55"/>
+                <line x1="12" y1="12" x2="4"  y2="8"  stroke="#818cf8" strokeWidth="0.9" opacity="0.45"/>
+                <line x1="12" y1="12" x2="20" y2="8"  stroke="#818cf8" strokeWidth="0.9" opacity="0.45"/>
+                <line x1="12" y1="12" x2="4"  y2="16" stroke="#22d3ee" strokeWidth="0.9" opacity="0.38"/>
+                <line x1="12" y1="12" x2="20" y2="16" stroke="#22d3ee" strokeWidth="0.9" opacity="0.38"/>
               </svg>
             </div>
-            <p style={{ fontSize: '1rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-              {activeFolder ? `Hola, soy Ozone` : 'Selecciona una carpeta'}
-            </p>
-            <p style={{ fontSize: '0.83rem', color: 'rgba(255,255,255,0.28)', margin: 0, textAlign: 'center', maxWidth: '280px', lineHeight: 1.5 }}>
-              {activeFolder
-                ? 'Escribe algo para empezar. Recuerdo todo lo que me contás.'
-                : 'Elige una carpeta de la sidebar para comenzar a chatear.'}
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+              <p style={{ fontSize: '1.15rem', fontWeight: 600, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
+                {activeFolder ? `Hola, soy Ozone` : 'Selecciona una carpeta'}
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', margin: 0, textAlign: 'center', maxWidth: '260px', lineHeight: 1.6 }}>
+                {activeFolder
+                  ? 'Escribe algo para empezar.\nRecuerdo todo lo que me contás.'
+                  : 'Elige una carpeta de la sidebar para comenzar a chatear.'}
+              </p>
+            </div>
           </div>
         ) : (
           <>
@@ -133,28 +138,30 @@ export default function ChatArea() {
               <MessageBubble key={msg.id} message={msg} />
             ))}
             {isSending && (
-              <div style={{ maxWidth: '720px', width: '100%', margin: '0 auto', padding: '1rem 0' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                  {/* Ozone icon */}
+              <div style={{ maxWidth: '760px', width: '100%', margin: '0 auto', padding: '0.5rem 0' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+                  {/* Ozone avatar */}
                   <div style={{
-                    width: '28px', height: '28px', borderRadius: '50%',
-                    background: 'rgba(99,102,241,0.15)',
+                    width: '30px', height: '30px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.15) 100%)',
+                    border: '1px solid rgba(99,102,241,0.25)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    marginTop: '1px',
                   }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="3" fill="#6366f1" opacity="0.9"/>
-                      <circle cx="4"  cy="8"  r="2" fill="#8b5cf6" opacity="0.6"/>
-                      <circle cx="20" cy="8"  r="2" fill="#8b5cf6" opacity="0.6"/>
-                      <line x1="12" y1="12" x2="4"  y2="8"  stroke="#6366f1" strokeWidth="1" opacity="0.5"/>
-                      <line x1="12" y1="12" x2="20" y2="8"  stroke="#6366f1" strokeWidth="1" opacity="0.5"/>
+                      <circle cx="12" cy="12" r="3" fill="#818cf8" opacity="1"/>
+                      <circle cx="4"  cy="8"  r="1.8" fill="#a78bfa" opacity="0.7"/>
+                      <circle cx="20" cy="8"  r="1.8" fill="#a78bfa" opacity="0.7"/>
+                      <line x1="12" y1="12" x2="4"  y2="8"  stroke="#818cf8" strokeWidth="1" opacity="0.5"/>
+                      <line x1="12" y1="12" x2="20" y2="8"  stroke="#818cf8" strokeWidth="1" opacity="0.5"/>
                     </svg>
                   </div>
                   {/* Typing dots */}
-                  <div style={{ display: 'flex', gap: '5px', paddingTop: '6px' }}>
+                  <div style={{ display: 'flex', gap: '5px', paddingTop: '8px' }}>
                     {[0, 150, 300].map((delay, i) => (
                       <div key={i} style={{
                         width: '7px', height: '7px', borderRadius: '50%',
-                        background: 'rgba(255,255,255,0.35)',
+                        background: 'rgba(255,255,255,0.3)',
                         animation: 'typing-dot 1.2s ease-in-out infinite',
                         animationDelay: `${delay}ms`,
                       }} />

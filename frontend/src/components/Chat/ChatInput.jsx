@@ -145,22 +145,25 @@ export default function ChatInput() {
   const isDisabled = !activeFolder || isSending || isTranscribing
 
   return (
-    <div style={{ padding: '0.75rem 1rem 1rem', background: '#212121' }}>
+    <div style={{ padding: '0.5rem 1.25rem 1.25rem', background: '#212121' }}>
       <form
         onSubmit={handleSubmit}
         style={{
-          maxWidth: '720px',
+          maxWidth: '760px',
           margin: '0 auto',
-          background: '#2f2f2f',
-          borderRadius: '1rem',
-          padding: '0.75rem 0.75rem 0.75rem 1rem',
+          background: '#2a2a2a',
+          borderRadius: '1.1rem',
+          padding: '0.65rem 0.65rem 0.65rem 1.1rem',
           display: 'flex',
           alignItems: 'flex-end',
           gap: '0.5rem',
           border: isRecording
             ? '1px solid rgba(239,68,68,0.5)'
-            : '1px solid rgba(255,255,255,0.08)',
-          transition: 'border-color 0.2s',
+            : '1px solid rgba(255,255,255,0.1)',
+          boxShadow: isRecording
+            ? '0 0 0 2px rgba(239,68,68,0.08)'
+            : '0 2px 12px rgba(0,0,0,0.3)',
+          transition: 'border-color 0.2s, box-shadow 0.2s',
         }}
       >
         <textarea
@@ -184,11 +187,11 @@ export default function ChatInput() {
             border: 'none',
             outline: 'none',
             resize: 'none',
-            fontSize: '0.9rem',
+            fontSize: '0.92rem',
             color: isTranscribing || isRecording
-              ? 'rgba(255,255,255,0.4)'
-              : 'rgba(255,255,255,0.88)',
-            lineHeight: 1.6,
+              ? 'rgba(255,255,255,0.35)'
+              : 'rgba(255,255,255,0.92)',
+            lineHeight: 1.65,
             maxHeight: '140px',
             fontFamily: 'inherit',
           }}
@@ -266,10 +269,10 @@ export default function ChatInput() {
       `}</style>
 
       <p style={{
-        maxWidth: '720px',
-        margin: '0.5rem auto 0',
-        fontSize: '0.7rem',
-        color: 'rgba(255,255,255,0.18)',
+        maxWidth: '760px',
+        margin: '0.45rem auto 0',
+        fontSize: '0.68rem',
+        color: 'rgba(255,255,255,0.16)',
         textAlign: 'center',
       }}>
         {isRecording

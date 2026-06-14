@@ -73,4 +73,26 @@ export const transcribeAudio = async (audioBlob) => {
   return response.json() // { text: '...' }
 }
 
+// TTS via Groq (returns Blob with audio/wav)
+export const ttsSpeak = async (text, voice) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+
+  const response = await fetch(`${API_URL}/tts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ text, voice }),
+  })
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.error || 'Error en TTS')
+  }
+
+  return response.blob() // audio/wav blob
+}
+
 export default api

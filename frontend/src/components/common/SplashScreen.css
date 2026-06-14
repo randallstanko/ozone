@@ -222,15 +222,15 @@
   font-size: clamp(0.6rem, 2.2vw, 0.75rem);
   letter-spacing: 0.38em;
   text-transform: uppercase;
-  color: rgba(99, 102, 241, 0.45);
+  color: rgba(99, 102, 241, 0.75);
   margin-top: 0.2rem;
-  font-weight: 400;
+  font-weight: 500;
   animation: fade-pulse 3.5s ease-in-out infinite;
 }
 
 @keyframes fade-pulse {
-  0%,100% { opacity: 0.45; }
-  50%     { opacity: 0.8; }
+  0%,100% { opacity: 0.7; }
+  50%     { opacity: 1; }
 }
 
 /* ============================================================
@@ -251,18 +251,18 @@
 
 .splash-phrase-main {
   font-size: clamp(0.95rem, 4vw, 1.1rem);
-  color: #1a1a1a;
-  font-weight: 500;
+  color: #111111;
+  font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.5;
 }
 
 .splash-phrase-sub {
   font-size: clamp(0.72rem, 3vw, 0.82rem);
-  color: rgba(100, 100, 100, 0.65);
+  color: #555555;
   letter-spacing: 0.01em;
   line-height: 1.55;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .phrase-in  { opacity: 1;   transform: translateY(0);    }
@@ -300,7 +300,7 @@
   position: absolute;
   bottom: 2.2rem;
   font-size: 0.75rem;
-  color: rgba(100, 100, 100, 0.5);
+  color: rgba(60, 60, 60, 0.75);
   text-align: center;
   padding: 0 1.5rem;
   animation: slow-appear 0.9s ease forwards;

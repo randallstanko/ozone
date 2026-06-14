@@ -11,6 +11,7 @@ const notesRouter = require('./routes/notes');
 const memoryRouter = require('./routes/memory');
 const authRouter = require('./routes/auth');
 const transcribeRouter = require('./routes/transcribe');
+const ttsRouter = require('./routes/tts');
 const { errorHandler } = require('./middleware/errorHandler');
 const { authMiddleware } = require('./middleware/auth');
 
@@ -50,6 +51,7 @@ app.use('/api/chat', chatRouter);
 app.use('/api/notes', notesRouter);
 app.use('/api/memory', memoryRouter);
 app.use('/api/transcribe', transcribeRouter);
+app.use('/api/tts', ttsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

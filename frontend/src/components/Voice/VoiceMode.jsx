@@ -1,35 +1,61 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { X, MicOff } from 'lucide-react'
+import { X } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
-import { transcribeAudio } from '../../services/api'
+import { transcribeAudio, ttsSpeak } from '../../services/api'
 import './VoiceMode.css'
 
 // --- Silence detection config ---
-const SILENCE_THRESHOLD = 0.015  // RMS level considered silence
-const SILENCE_DURATION_MS = 1500 // ms of silence before auto-stop
-const MIN_RECORD_MS = 800        // minimum recording before checking silence
+const SILENCE_THRESHOLD = 0.012  // RMS level considered silence
+const SILENCE_DURATION_MS = 1400 // ms of silence before auto-stop
+const MIN_RECORD_MS = 700        // minimum recording before checking silence
 
 export default function VoiceMode({ onClose }) {
-  // State machine: idle | listening | thinking | speaking | error
-  const [phase, setPhase] = useState('idle')
-  const [statusText, setStatusText] = useState('Toca para hablar')
-  const [muted, setMuted] = useState(false)
+  // State machine: listening | thinking | speaking | error
+  const [phase, setPhase] = useState('listening')
+  const [statusText, setStatusText] = useState('Escuchando...')
 
-  // Refs to keep stable across renders
+  // Refs for stable async state
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
   const streamRef = useRef(null)
   const analyserRef = useRef(null)
   const silenceRAFRef = useRef(null)
   const recordStartRef = useRef(0)
-  const loopActiveRef = useRef(false)
-  const mutedRef = useRef(false)
+  const loopActiveRef = useRef(true)
   const mountedRef = useRef(true)
-  const phaseRef = useRef('idle')
+  const currentAudioRef = useRef(null)   // HTMLAudioElement for TTS playback
+  const audioCtxRef = useRef(null)       // for interrupt detection
 
-  // Keep refs in sync
-  useEffect(() => { phaseRef.current = phase }, [phase])
-  useEffect(() => { mutedRef.current = muted }, [muted])
+  // ---- Safe state setters ----
+  const safeSetPhase = (p) => { if (mountedRef.current) setPhase(p) }
+  const safeSetStatus = (t) => { if (mountedRef.current) setStatusText(t) }
+
+  // ---- Stop current TTS audio ----
+  function stopAudio() {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause()
+      currentAudioRef.current.src = ''
+      currentAudioRef.current = null
+    }
+  }
+
+  // ---- Hard stop everything ----
+  function hardStop() {
+    loopActiveRef.current = false
+    stopAudio()
+    cancelAnimationFrame(silenceRAFRef.current)
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try { mediaRecorderRef.current.stop() } catch (_) {}
+    }
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
+    mediaRecorderRef.current = null
+    analyserRef.current = null
+    if (audioCtxRef.current) {
+      try { audioCtxRef.current.close() } catch (_) {}
+      audioCtxRef.current = null
+    }
+  }
 
   // Cleanup on unmount
   useEffect(() => {
@@ -40,55 +66,37 @@ export default function VoiceMode({ onClose }) {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ---- Safe state setters ----
-  const safeSetPhase = (p) => { if (mountedRef.current) setPhase(p) }
-  const safeSetStatus = (t) => { if (mountedRef.current) setStatusText(t) }
+  // ---- TTS via Groq (real audio) ----
+  async function speakText(text) {
+    if (!text?.trim() || !mountedRef.current || !loopActiveRef.current) return
 
-  // ---- Hard stop everything ----
-  function hardStop() {
-    loopActiveRef.current = false
-    window.speechSynthesis?.cancel()
-    cancelAnimationFrame(silenceRAFRef.current)
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try { mediaRecorderRef.current.stop() } catch (_) {}
+    stopAudio() // stop any previous audio
+
+    try {
+      const audioBlob = await ttsSpeak(text)
+      if (!mountedRef.current || !loopActiveRef.current) return
+
+      const url = URL.createObjectURL(audioBlob)
+      const audio = new Audio(url)
+      currentAudioRef.current = audio
+
+      return new Promise((resolve) => {
+        audio.onended = () => {
+          URL.revokeObjectURL(url)
+          currentAudioRef.current = null
+          resolve()
+        }
+        audio.onerror = () => {
+          URL.revokeObjectURL(url)
+          currentAudioRef.current = null
+          resolve()
+        }
+        audio.play().catch(() => resolve())
+      })
+    } catch (err) {
+      console.error('[VoiceMode] TTS error:', err)
+      // Fallback: skip speaking, keep loop alive
     }
-    streamRef.current?.getTracks().forEach(t => t.stop())
-    streamRef.current = null
-    mediaRecorderRef.current = null
-    analyserRef.current = null
-  }
-
-  // ---- TTS via Web Speech API ----
-  function speakText(text) {
-    return new Promise((resolve) => {
-      if (!text?.trim() || mutedRef.current) { resolve(); return }
-
-      window.speechSynthesis.cancel()
-      const utterance = new SpeechSynthesisUtterance(text)
-
-      // Best voice selection: prefer natural Spanish voices
-      const voices = window.speechSynthesis.getVoices()
-      const esVoice = voices.find(v => v.lang.startsWith('es') && v.localService)
-        || voices.find(v => v.lang.startsWith('es'))
-        || voices.find(v => v.lang.startsWith('en'))
-        || voices[0]
-      if (esVoice) utterance.voice = esVoice
-      utterance.rate = 1.05
-      utterance.pitch = 1.0
-      utterance.volume = 1.0
-
-      let resolved = false
-      const done = () => { if (!resolved) { resolved = true; resolve() } }
-      utterance.onend = done
-      utterance.onerror = done
-
-      // iOS Safari workaround: can get stuck; safety timeout
-      const safety = setTimeout(done, 60000)
-      utterance.onend = () => { clearTimeout(safety); done() }
-      utterance.onerror = () => { clearTimeout(safety); done() }
-
-      window.speechSynthesis.speak(utterance)
-    })
   }
 
   // ---- Silence detection using Web Audio API ----
@@ -120,7 +128,7 @@ export default function VoiceMode({ onClose }) {
     silenceRAFRef.current = requestAnimationFrame(check)
   }
 
-  // ---- Main listen → transcribe → respond → speak loop ----
+  // ---- Main loop: listen → transcribe → respond → speak → repeat ----
   const startListening = useCallback(async () => {
     if (!mountedRef.current || !loopActiveRef.current) return
 
@@ -144,8 +152,9 @@ export default function VoiceMode({ onClose }) {
 
     streamRef.current = stream
 
-    // Web Audio API analyser
+    // Web Audio analyser for silence detection
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+    audioCtxRef.current = audioCtx
     const source = audioCtx.createMediaStreamSource(stream)
     const analyser = audioCtx.createAnalyser()
     analyser.fftSize = 512
@@ -171,7 +180,7 @@ export default function VoiceMode({ onClose }) {
 
     recorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop())
-      audioCtx.close()
+      try { audioCtx.close() } catch (_) {}
       cancelAnimationFrame(silenceRAFRef.current)
 
       if (!mountedRef.current || !loopActiveRef.current) return
@@ -179,7 +188,7 @@ export default function VoiceMode({ onClose }) {
       const mimeType = recorder.mimeType || supportedMime || 'audio/webm'
       const blob = new Blob(audioChunksRef.current, { type: mimeType })
 
-      // Discard near-empty blobs (user didn't really speak)
+      // Discard near-empty blobs
       if (blob.size < 2000) {
         startListening()
         return
@@ -200,12 +209,11 @@ export default function VoiceMode({ onClose }) {
       if (!mountedRef.current || !loopActiveRef.current) return
 
       if (!userText) {
-        // Nothing heard, loop back
         startListening()
         return
       }
 
-      // --- Send to chat + get AI response ---
+      // --- Send to AI ---
       safeSetStatus('Pensando...')
 
       let aiText = ''
@@ -237,78 +245,60 @@ export default function VoiceMode({ onClose }) {
     detectSilence(analyser, recorder)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ---- Controls ----
-  const startLoop = useCallback(() => {
-    loopActiveRef.current = true
-    startListening()
+  // Auto-start listening on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mountedRef.current && loopActiveRef.current) {
+        startListening()
+      }
+    }, 300)
+    return () => clearTimeout(timer)
   }, [startListening])
 
-  const pauseLoop = useCallback(() => {
-    window.speechSynthesis?.cancel()
-    cancelAnimationFrame(silenceRAFRef.current)
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try { mediaRecorderRef.current.stop() } catch (_) {}
+  // ---- Interrupt: tap to stop AI speaking and re-listen ----
+  const handleOrbClick = () => {
+    if (phase === 'speaking') {
+      // Interrupt TTS and start listening again
+      stopAudio()
+      if (mountedRef.current && loopActiveRef.current) {
+        startListening()
+      }
+    } else if (phase === 'listening') {
+      // Force-stop current recording early
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try { mediaRecorderRef.current.stop() } catch (_) {}
+      }
     }
-    streamRef.current?.getTracks().forEach(t => t.stop())
-    streamRef.current = null
-    loopActiveRef.current = false
-    safeSetPhase('idle')
-    safeSetStatus('Toca para hablar')
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // thinking: no-op (let it finish)
+  }
 
   const handleClose = useCallback(() => {
     hardStop()
     onClose()
   }, [onClose]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const toggleMute = useCallback(() => {
-    setMuted(prev => {
-      const next = !prev
-      mutedRef.current = next
-      if (next) window.speechSynthesis?.cancel()
-      return next
-    })
-  }, [])
-
-  const handleOrbClick = () => {
-    if (phase === 'idle') startLoop()
-    else pauseLoop()
-  }
-
   return (
     <div className="voice-overlay" role="dialog" aria-modal="true" aria-label="Modo voz">
-      {/* Top bar */}
-      <div className="voice-top-bar">
-        <span className="voice-label">Modo Voz</span>
-        <div className="voice-top-actions">
-          <button
-            className={`voice-btn-icon${muted ? ' voice-btn-icon--active' : ''}`}
-            onClick={toggleMute}
-            aria-label={muted ? 'Activar sonido' : 'Silenciar TTS'}
-            title={muted ? 'Activar sonido' : 'Silenciar TTS'}
-          >
-            <MicOff size={18} />
-          </button>
-          <button
-            className="voice-btn-icon"
-            onClick={handleClose}
-            aria-label="Cerrar modo voz"
-          >
-            <X size={20} />
-          </button>
-        </div>
-      </div>
+      {/* Close button */}
+      <button
+        className="voice-close-btn"
+        onClick={handleClose}
+        aria-label="Cerrar modo voz"
+      >
+        <X size={22} />
+      </button>
 
-      {/* Center orb */}
+      {/* Center section */}
       <div className="voice-center">
+        {/* Orb */}
         <button
           className={`voice-orb voice-orb--${phase}`}
           onClick={handleOrbClick}
-          aria-label={phase === 'idle' ? 'Iniciar conversación por voz' : 'Pausar'}
+          aria-label={phase === 'speaking' ? 'Interrumpir' : 'Continuar'}
         >
           <div className="voice-orb-inner" />
 
-          {/* Ripple rings when active */}
+          {/* Ripple rings when listening or speaking */}
           {(phase === 'listening' || phase === 'speaking') && (
             <>
               <div className="voice-ring voice-ring--1" />
@@ -329,25 +319,18 @@ export default function VoiceMode({ onClose }) {
 
         <p className="voice-status">{statusText}</p>
 
-        {phase !== 'idle' && (
-          <button className="voice-stop-btn" onClick={pauseLoop}>
-            Pausar
-          </button>
-        )}
+        <p className="voice-hint">
+          {phase === 'listening'
+            ? 'El silencio se detecta automáticamente'
+            : phase === 'thinking'
+            ? 'Procesando tu mensaje...'
+            : phase === 'speaking'
+            ? 'Toca para interrumpir'
+            : phase === 'error'
+            ? 'Error de micrófono'
+            : ''}
+        </p>
       </div>
-
-      {/* Bottom hint */}
-      <p className="voice-hint">
-        {phase === 'idle'
-          ? 'Toca el orbe para iniciar la conversación'
-          : phase === 'listening'
-          ? 'Habla... el silencio se detecta automáticamente'
-          : phase === 'thinking'
-          ? 'Procesando tu mensaje...'
-          : phase === 'speaking'
-          ? 'Ozone está respondiendo'
-          : ''}
-      </p>
     </div>
   )
 }
