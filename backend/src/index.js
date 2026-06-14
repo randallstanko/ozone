@@ -73,6 +73,18 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`🧠 Ozone Backend running on port ${PORT}`);
+
+  // Keep Supabase free-tier project alive (pauses after 7 days of inactivity)
+  const { supabase } = require('./config/supabase');
+  const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+  setInterval(async () => {
+    try {
+      await supabase.from('users').select('id').limit(1);
+      console.log('[Keep-alive] ping to Supabase OK');
+    } catch (err) {
+      console.error('[Keep-alive] ping to Supabase failed:', err.message);
+    }
+  }, TWELVE_HOURS);
 });
 
 module.exports = app;

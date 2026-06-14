@@ -20,15 +20,13 @@ function App() {
   // 1. Verificar sesion existente al arrancar
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-      console.log('[Auth] getSession result:', s ? `user=${s.user?.email}` : 'no session')
       setSession(s)
       if (s) {
         try {
           const name = s.user?.user_metadata?.full_name || s.user?.email
           await api.authSetup(name)
-          console.log('[Auth] setup OK (getSession path)')
         } catch (err) {
-          console.log('[Auth] setup error (getSession path):', err?.response?.status, err?.message)
+          console.error('[Auth] setup error (getSession path):', err?.response?.status, err?.message)
         }
         setSetupDone(true)
       }
@@ -36,15 +34,13 @@ function App() {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
-      console.log('[Auth] onAuthStateChange event:', _event, s ? `user=${s.user?.email}` : 'no session')
       setSession(s)
       if (s && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
         try {
           const name = s.user?.user_metadata?.full_name || s.user?.email
           await api.authSetup(name)
-          console.log('[Auth] setup OK (onAuthStateChange path)')
         } catch (err) {
-          console.log('[Auth] setup error (onAuthStateChange path):', err?.response?.status, err?.message)
+          console.error('[Auth] setup error (onAuthStateChange path):', err?.response?.status, err?.message)
         }
         setSetupDone(true)
         setAuthChecked(true)
@@ -64,10 +60,8 @@ function App() {
     if (!authChecked || !session || !setupDone) return
 
     const load = async () => {
-      console.log('[App] fetchFolders starting...')
       const startTime = Date.now()
       await fetchFolders()
-      console.log('[App] fetchFolders done')
       const elapsed = Date.now() - startTime
       const remaining = Math.max(0, 20000 - elapsed)
       setTimeout(() => {
