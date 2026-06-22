@@ -83,7 +83,7 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       setSession(s)
-      if (s && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED')) {
+      if (s && (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED' || _event === 'INITIAL_SESSION')) {
         try {
           const name = s.user?.user_metadata?.full_name || s.user?.email
           await api.authSetup(name)
@@ -93,7 +93,7 @@ function App() {
         setSetupDone(true)
         setAuthChecked(true)
       }
-      if (!s) {
+      if (_event === 'SIGNED_OUT') {
         setSetupDone(false)
         setDataReady(false)
         setSplashMounted(true)
