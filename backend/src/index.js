@@ -53,6 +53,18 @@ app.use('/api/memory', memoryRouter);
 app.use('/api/transcribe', transcribeRouter);
 app.use('/api/tts', ttsRouter);
 
+// Keep-alive ping: keeps BOTH Render backend AND Supabase free tier active.
+// Hit by GitHub Actions cron every 5 min (see .github/workflows/keep-alive.yml).
+app.get('/api/ping', async (req, res) => {
+  try {
+    const { supabase } = require('./config/supabase');
+    await supabase.from('users').select('id').limit(1);
+    res.json({ ok: true, ts: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   const supabaseUrl = process.env.SUPABASE_URL;

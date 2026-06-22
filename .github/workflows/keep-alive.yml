@@ -1,0 +1,26 @@
+name: Keep Ozone Alive
+
+# Pings /api/ping every 5 minutes so Render backend stays awake
+# and Supabase free-tier project never pauses.
+# GitHub Actions is free for public repos (2000 min/month for private).
+# 5-min cron = ~8640 runs/month × ~5s each ≈ 720 min/month (fits free tier).
+
+on:
+  schedule:
+    # Every 5 minutes, all day, every day.
+    # GitHub cron uses UTC. Minimum interval is 5 min.
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  ping:
+    name: Ping backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Ping /api/ping
+        run: |
+          RESPONSE=$(curl -sf --max-time 30 https://ozone-0qpm.onrender.com/api/ping)
+          echo "Response: $RESPONSE"
+          echo "$RESPONSE" | grep -q '"ok":true' && echo "Ping OK" || (echo "Ping FAILED" && exit 1)
