@@ -87,6 +87,8 @@
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
   border-right: 1px solid var(--border);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .sidebar-drawer.open {
@@ -481,7 +483,7 @@
    CHAT INPUT
    ============================================================ */
 .chat-input-wrap {
-  padding: 0.5rem 1rem 1rem;
+  padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom));
   background: var(--bg-base);
   flex-shrink: 0;
 }
@@ -723,8 +725,8 @@
   z-index: 20;
   display: flex;
   align-items: center;
-  height: 52px;
-  padding: 0 1rem;
+  height: calc(52px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 1rem 0;
   background: var(--bg-base);
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);

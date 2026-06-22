@@ -1,13 +1,11 @@
-const CACHE_NAME = 'ozone-v1';
+const CACHE_NAME = 'ozone-v2';
 const APP_SHELL = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
 ];
 
-// Install: cache app shell
+// Install: cache app shell (NOT the HTML — we want network-first for that)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
@@ -15,7 +13,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: clean old caches + claim clients
+// Activate: clean old caches + claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -27,7 +25,8 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for /api/, cache-first for everything else
+// Fetch: network-first for everything (HTML, JS, CSS, API)
+// Falls back to cache only if network is unavailable
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -37,30 +36,24 @@ self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests
   if (url.origin !== location.origin) return;
 
-  // Network-first for API calls
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => response)
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // Cache-first for app shell & static assets
+  // Network-first for ALL requests
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(event.request).then((response) => {
-        // Only cache successful responses
-        if (!response || response.status !== 200 || response.type === 'opaque') {
-          return response;
+    fetch(event.request)
+      .then((response) => {
+        // Cache successful responses for static assets (not API/HTML)
+        if (
+          response &&
+          response.status === 200 &&
+          response.type !== 'opaque' &&
+          !url.pathname.startsWith('/api/') &&
+          !url.pathname.endsWith('.html') &&
+          url.pathname !== '/'
+        ) {
+          const toCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, toCache));
         }
-        const toCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, toCache));
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });
