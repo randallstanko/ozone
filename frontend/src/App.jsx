@@ -9,6 +9,17 @@ import useChatStore from './store/chatStore'
 import { supabase } from './config/supabase'
 import * as api from './services/api'
 
+// Derive base URL from VITE_API_URL (strip trailing /api) or use Render default
+const _rawApi = import.meta.env.VITE_API_URL || 'https://ozone-0qpm.onrender.com/api'
+const BACKEND_URL = _rawApi.replace(/\/api\/?$/, '')
+
+// Wake up Render backend in background (fire-and-forget)
+function pingBackend() {
+  fetch(`${BACKEND_URL}/api/health`, { method: 'GET' })
+    .then(() => console.log('[Wake-up] backend ping OK'))
+    .catch(() => console.log('[Wake-up] backend ping failed (still waking)'))
+}
+
 function App() {
   const [view, setView] = useState('chat')
   const [dataReady, setDataReady] = useState(false)
@@ -18,6 +29,11 @@ function App() {
   const [installPrompt, setInstallPrompt] = useState(null)
   const deferredPromptRef = useRef(null)
   const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders, session, setSession, activeFolder } = useChatStore()
+
+  // Ping backend immediately to wake Render from cold start
+  useEffect(() => {
+    pingBackend()
+  }, [])
 
   // Capture beforeinstallprompt for Android Chrome
   useEffect(() => {
@@ -38,7 +54,7 @@ function App() {
     deferredPromptRef.current = null
   }
 
-  // 1. Verificar sesion existente al arrancar
+  // 1. Verificar sesion existente al arrancar (no bloquea render inicial)
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       setSession(s)
@@ -51,6 +67,9 @@ function App() {
         }
         setSetupDone(true)
       }
+      setAuthChecked(true)
+    }).catch(() => {
+      // Supabase unreachable — mark as checked so we show AuthScreen
       setAuthChecked(true)
     })
 
@@ -81,14 +100,10 @@ function App() {
     if (!authChecked || !session || !setupDone) return
 
     const load = async () => {
-      const startTime = Date.now()
       await fetchFolders()
-      const elapsed = Date.now() - startTime
-      const remaining = Math.max(0, 20000 - elapsed)
-      setTimeout(() => {
-        setDataReady(true)
-        setTimeout(() => setSplashMounted(false), 950)
-      }, remaining)
+      // Mostrar la app apenas los datos esten listos, sin espera artificial
+      setDataReady(true)
+      setTimeout(() => setSplashMounted(false), 950)
     }
     load()
   }, [authChecked, session, setupDone]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -104,13 +119,17 @@ function App() {
     setSetupDone(true)
   }
 
-  if (!authChecked) return null
+  // Mostrar splash inmediatamente mientras se verifica auth
+  // NO retornar null — el splash ya esta montado desde el inicio
+  if (!authChecked) {
+    return <SplashScreen visible={true} />
+  }
 
   if (!session) return <AuthScreen onAuth={handleAuth} />
 
   return (
     <>
-      {/* Splash — white, fades out to reveal dark chat */}
+      {/* Splash — fades out to reveal dark chat */}
       {splashMounted && <SplashScreen visible={!dataReady} />}
 
       <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#212121' }}>
