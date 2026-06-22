@@ -16,7 +16,6 @@ export default function ChatInput({ onVoiceOpen }) {
   const { sendMessage, isSending, activeFolder } = useChatStore()
   const textareaRef = useRef(null)
 
-  // Audio recording state
   const [isRecording, setIsRecording] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [recordingSeconds, setRecordingSeconds] = useState(0)
@@ -32,7 +31,6 @@ export default function ChatInput({ onVoiceOpen }) {
     }
   }, [input])
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
@@ -47,9 +45,7 @@ export default function ChatInput({ onVoiceOpen }) {
     if (!input.trim() || isSending || !activeFolder) return
     sendMessage(input.trim())
     setInput('')
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-    }
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
   }
 
   const handleKeyDown = (e) => {
@@ -146,13 +142,15 @@ export default function ChatInput({ onVoiceOpen }) {
               ? 'Transcribiendo...'
               : isRecording
               ? 'Grabando...'
-              : 'Escribe un mensaje...'
+              : activeFolder
+              ? 'Escribe tu mensaje...'
+              : 'Selecciona un contexto para chatear...'
           }
           rows={1}
           className="chat-textarea"
           style={{
             color: isTranscribing || isRecording
-              ? 'rgba(255,255,255,0.3)'
+              ? 'rgba(255,255,255,0.28)'
               : 'rgba(255,255,255,0.92)',
           }}
           disabled={isDisabled || isRecording}
@@ -167,13 +165,14 @@ export default function ChatInput({ onVoiceOpen }) {
             fontVariantNumeric: 'tabular-nums',
             flexShrink: 0,
             alignSelf: 'center',
+            fontWeight: 600,
           }}>
             {formatDuration(recordingSeconds)}
           </span>
         )}
 
-        {/* Left button group: voice mode + mic */}
-        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+        {/* Buttons */}
+        <div style={{ display: 'flex', gap: '4px', flexShrink: 0, alignItems: 'center' }}>
           {/* Voice mode button — always visible */}
           {onVoiceOpen && (
             <button
@@ -182,13 +181,13 @@ export default function ChatInput({ onVoiceOpen }) {
               title="Modo voz"
               className="voice-btn"
               disabled={!activeFolder}
-              style={{ opacity: activeFolder ? 1 : 0.4, cursor: activeFolder ? 'pointer' : 'not-allowed' }}
+              style={{ opacity: activeFolder ? 1 : 0.35, cursor: activeFolder ? 'pointer' : 'not-allowed' }}
             >
               <Headphones size={15} />
             </button>
           )}
 
-          {/* Mic button — only when no text typed */}
+          {/* Mic button — only when no text */}
           {!hasText && (
             <button
               type="button"
@@ -203,26 +202,26 @@ export default function ChatInput({ onVoiceOpen }) {
               }
             </button>
           )}
-        </div>
 
-        {/* Send button — only when there's text */}
-        {hasText && (
-          <button
-            type="submit"
-            disabled={!canSend}
-            className="send-btn"
-            title="Enviar"
-          >
-            <ArrowUp size={16} />
-          </button>
-        )}
+          {/* Send button — only when there's text */}
+          {hasText && (
+            <button
+              type="submit"
+              disabled={!canSend}
+              className="send-btn"
+              title="Enviar mensaje"
+            >
+              <ArrowUp size={16} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Disclaimer */}
       <p className="chat-disclaimer">
         {isRecording
           ? 'Toca el cuadrado para detener y enviar'
-          : 'Ozone recuerda todo. Puede cometer errores.'}
+          : 'Ozone puede cometer errores. Considera verificar la informacion importante.'}
       </p>
     </div>
   )

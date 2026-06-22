@@ -1,18 +1,9 @@
-// Ozone orb icon — inline SVG
+import ReactMarkdown from 'react-markdown'
+
+// Ozone orb avatar for AI messages
 function OzoneOrb() {
   return (
-    <div style={{
-      width: '28px',
-      height: '28px',
-      borderRadius: '50%',
-      background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 100%)',
-      border: '1px solid rgba(99,102,241,0.2)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-      marginTop: '2px',
-    }}>
+    <div className="msg-ai-avatar">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="3" fill="#818cf8" opacity="1"/>
         <circle cx="4"  cy="8"  r="1.8" fill="#a78bfa" opacity="0.7"/>
@@ -28,26 +19,56 @@ function OzoneOrb() {
   )
 }
 
+function formatTime(isoString) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  const h = d.getHours().toString().padStart(2, '0')
+  const m = d.getMinutes().toString().padStart(2, '0')
+  return `${h}:${m}`
+}
+
 export default function MessageBubble({ message }) {
   const isUser = message.origen === 'usuario'
+  const time = formatTime(message.created_at)
 
   return (
     <div className="message-row">
       {isUser ? (
         /* User message — right-aligned bubble */
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           <div className="msg-user-bubble">
             {message.content}
           </div>
+          {time && <span className="msg-timestamp">{time}</span>}
         </div>
       ) : (
-        /* AI message — left-aligned, no bubble, avatar on left */
+        /* AI message — left-aligned, markdown rendered */
         <div className="msg-ai-row">
           <OzoneOrb />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p className="msg-ai-text">
-              {message.content}
-            </p>
+            <div className="msg-ai-text">
+              <ReactMarkdown
+                components={{
+                  // Override anchor to open in new tab
+                  a: ({ node, ...props }) => (
+                    <a {...props} target="_blank" rel="noopener noreferrer" />
+                  ),
+                  // Prevent wrapping code blocks in extra elements
+                  pre: ({ node, ...props }) => <pre {...props} />,
+                  code: ({ node, inline, ...props }) =>
+                    inline
+                      ? <code {...props} />
+                      : <code {...props} />,
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
+            {time && (
+              <span className="msg-timestamp" style={{ textAlign: 'left', marginTop: '0.35rem', display: 'block' }}>
+                {time}
+              </span>
+            )}
           </div>
         </div>
       )}

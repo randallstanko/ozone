@@ -135,7 +135,7 @@ function App() {
     <>
       {splashMounted && <SplashScreen visible={!dataReady} />}
 
-      <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#212121' }}>
+      <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#0a0a0f' }}>
 
         {/* Mobile backdrop */}
         {sidebarOpen && (
@@ -155,11 +155,11 @@ function App() {
           flexDirection: 'column',
           overflow: 'hidden',
           minWidth: 0,
-          background: '#212121',
+          background: '#0a0a0f',
         }}>
           {/* Mobile top bar — hamburger + folder name */}
           <div
-            className="md:hidden"
+            className="md:hidden mobile-topbar"
             style={{
               position: 'sticky',
               top: 0,
@@ -168,7 +168,7 @@ function App() {
               alignItems: 'center',
               height: '52px',
               padding: '0 1rem',
-              background: '#212121',
+              background: '#0a0a0f',
               flexShrink: 0,
               borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}

@@ -43,14 +43,15 @@ export default function FolderItem({ folder, isActive, onClick }) {
           style={{
             width: '100%',
             boxSizing: 'border-box',
-            background: 'rgba(255,255,255,0.07)',
-            border: '1px solid rgba(99,102,241,0.5)',
-            borderRadius: '0.5rem',
+            background: 'rgba(99,102,241,0.08)',
+            border: '1px solid rgba(99,102,241,0.45)',
+            borderRadius: '10px',
             padding: '0.5rem 0.75rem',
             fontSize: '0.875rem',
             color: '#ffffff',
             outline: 'none',
             fontFamily: 'inherit',
+            transition: 'border-color 200ms ease',
           }}
           autoFocus
           onBlur={handleRename}
@@ -63,10 +64,9 @@ export default function FolderItem({ folder, isActive, onClick }) {
     <div
       onClick={onClick}
       className={`sidebar-item folder-item-gpt${isActive ? ' active' : ''}`}
-      style={{ marginBottom: '1px', position: 'relative' }}
     >
-      {/* Icon */}
-      <span style={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>
+      {/* Emoji icon */}
+      <span className="sidebar-item-icon">
         {folder.icon}
       </span>
 
@@ -75,7 +75,7 @@ export default function FolderItem({ folder, isActive, onClick }) {
         {folder.name}
       </span>
 
-      {/* 3-dot menu — only for non-general folders */}
+      {/* 3-dot menu — non-general folders only */}
       {!folder.is_general && (
         <div
           className="folder-menu-wrap"
@@ -90,21 +90,21 @@ export default function FolderItem({ folder, isActive, onClick }) {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: 'rgba(255,255,255,0.35)',
-              padding: '3px',
-              borderRadius: '4px',
+              color: 'rgba(255,255,255,0.3)',
+              padding: '4px',
+              borderRadius: '6px',
               display: 'flex',
               opacity: 0,
-              transition: 'opacity 150ms ease, color 150ms ease',
-              minWidth: '24px',
-              minHeight: '24px',
+              transition: 'opacity 150ms ease, color 150ms ease, background 150ms ease',
+              minWidth: '26px',
+              minHeight: '26px',
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
+            onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; e.currentTarget.style.background = 'none' }}
           >
-            <MoreHorizontal size={14} />
+            <MoreHorizontal size={13} />
           </button>
 
           {showMenu && (
@@ -114,12 +114,13 @@ export default function FolderItem({ folder, isActive, onClick }) {
               top: '100%',
               marginTop: '4px',
               width: '160px',
-              background: '#2a2a2a',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '0.75rem',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.55)',
+              background: '#1e1e2a',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '12px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3)',
               zIndex: 100,
               overflow: 'hidden',
+              animation: 'fadeIn 150ms ease both',
             }}>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsRenaming(true); setShowMenu(false) }}
@@ -128,18 +129,19 @@ export default function FolderItem({ folder, isActive, onClick }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.6rem 0.875rem',
+                  padding: '0.625rem 0.875rem',
                   fontSize: '0.8125rem',
-                  color: 'rgba(255,255,255,0.78)',
+                  color: 'rgba(255,255,255,0.75)',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                   textAlign: 'left',
                   minHeight: '40px',
+                  transition: 'background 150ms ease, color 150ms ease',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.95)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)' }}
               >
                 <Pencil size={13} />
                 Renombrar
@@ -151,7 +153,7 @@ export default function FolderItem({ folder, isActive, onClick }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.6rem 0.875rem',
+                  padding: '0.625rem 0.875rem',
                   fontSize: '0.8125rem',
                   color: '#f87171',
                   background: 'none',
@@ -160,8 +162,9 @@ export default function FolderItem({ folder, isActive, onClick }) {
                   fontFamily: 'inherit',
                   textAlign: 'left',
                   minHeight: '40px',
+                  transition: 'background 150ms ease',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >
                 <Trash2 size={13} />
