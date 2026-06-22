@@ -45,8 +45,8 @@ export default function SplashScreen({ visible }) {
       setTimeout(() => {
         setPhraseIndex((i) => (i + 1) % PHRASES.length)
         setPhraseIn(true)
-      }, 500)
-    }, 7000)
+      }, 400)
+    }, 2800)
     return () => clearInterval(id)
   }, [])
 
@@ -95,9 +95,9 @@ export default function SplashScreen({ visible }) {
         <span className="dot dot-3" />
       </div>
 
-      {elapsed >= 30 && (
+      {elapsed >= 8 && (
         <p className="splash-slow">
-          {elapsed >= 60
+          {elapsed >= 18
             ? 'Ozone esta despertando, un momento mas...'
             : 'Casi listo...'}
         </p>

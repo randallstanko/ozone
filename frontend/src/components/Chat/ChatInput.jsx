@@ -1,18 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { ArrowUp, Mic, Square } from 'lucide-react'
+import { ArrowUp, Mic, Square, Headphones } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import { transcribeAudio } from '../../services/api'
 
-// Formatea segundos como MM:SS
 function formatDuration(seconds) {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0')
   const s = (seconds % 60).toString().padStart(2, '0')
   return `${m}:${s}`
 }
 
-const MAX_DURATION_SECONDS = 300 // 5 minutos
+const MAX_DURATION_SECONDS = 300
 
-export default function ChatInput() {
+export default function ChatInput({ onVoiceOpen }) {
   const [input, setInput] = useState('')
   const { sendMessage, isSending, activeFolder } = useChatStore()
   const textareaRef = useRef(null)
@@ -25,11 +24,11 @@ export default function ChatInput() {
   const audioChunksRef = useRef([])
   const timerRef = useRef(null)
 
+  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height =
-        Math.min(textareaRef.current.scrollHeight, 140) + 'px'
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 180) + 'px'
     }
   }, [input])
 
@@ -48,6 +47,9 @@ export default function ChatInput() {
     if (!input.trim() || isSending || !activeFolder) return
     sendMessage(input.trim())
     setInput('')
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
   }
 
   const handleKeyDown = (e) => {
@@ -69,8 +71,6 @@ export default function ChatInput() {
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-
-      // Elegir el mejor formato soportado por el browser
       const mimeTypes = [
         'audio/webm;codecs=opus',
         'audio/webm',
@@ -79,93 +79,63 @@ export default function ChatInput() {
         'audio/ogg',
       ]
       const supportedMime = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || ''
-
       const recorder = new MediaRecorder(stream, supportedMime ? { mimeType: supportedMime } : {})
       mediaRecorderRef.current = recorder
       audioChunksRef.current = []
 
       recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          audioChunksRef.current.push(e.data)
-        }
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data)
       }
 
       recorder.onstop = async () => {
-        // Detener el stream de micrófono
         stream.getTracks().forEach(t => t.stop())
-
         const mimeType = recorder.mimeType || supportedMime || 'audio/webm'
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
-
         if (audioBlob.size === 0) return
-
         setIsTranscribing(true)
         try {
           const { text } = await transcribeAudio(audioBlob)
-          if (text && text.trim()) {
-            sendMessage(text.trim())
-          }
+          if (text && text.trim()) sendMessage(text.trim())
         } catch (err) {
-          console.error('Transcripción fallida:', err)
+          console.error('Transcripcion fallida:', err)
         } finally {
           setIsTranscribing(false)
         }
       }
 
-      recorder.start(250) // recolectar chunks cada 250ms
+      recorder.start(250)
       setIsRecording(true)
       setRecordingSeconds(0)
 
-      // Timer de duración + límite de 5 min
       timerRef.current = setInterval(() => {
         setRecordingSeconds(prev => {
           const next = prev + 1
-          if (next >= MAX_DURATION_SECONDS) {
-            stopRecording()
-          }
+          if (next >= MAX_DURATION_SECONDS) stopRecording()
           return next
         })
       }, 1000)
     } catch (err) {
-      console.error('No se pudo acceder al micrófono:', err)
-      alert('No se pudo acceder al micrófono. Verifica los permisos.')
+      console.error('No se pudo acceder al microfono:', err)
+      alert('No se pudo acceder al microfono. Verifica los permisos.')
     }
   }, [stopRecording, sendMessage])
 
   const handleMicClick = () => {
-    if (isRecording) {
-      stopRecording()
-    } else {
-      startRecording()
-    }
+    if (isRecording) stopRecording()
+    else startRecording()
   }
 
-  const canSend = input.trim() && !isSending && activeFolder && !isRecording && !isTranscribing
-  const showMic = !input.trim() && !isTranscribing
+  const hasText = input.trim().length > 0
+  const canSend = hasText && !isSending && !!activeFolder && !isRecording && !isTranscribing
   const isDisabled = !activeFolder || isSending || isTranscribing
 
   return (
-    <div style={{ padding: '0.5rem 1.25rem 1.25rem', background: '#212121' }}>
+    <div className="chat-input-wrap">
       <form
         onSubmit={handleSubmit}
-        style={{
-          maxWidth: '760px',
-          margin: '0 auto',
-          background: '#2a2a2a',
-          borderRadius: '1.1rem',
-          padding: '0.65rem 0.65rem 0.65rem 1.1rem',
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: '0.5rem',
-          border: isRecording
-            ? '1px solid rgba(239,68,68,0.5)'
-            : '1px solid rgba(255,255,255,0.1)',
-          boxShadow: isRecording
-            ? '0 0 0 2px rgba(239,68,68,0.08)'
-            : '0 2px 12px rgba(0,0,0,0.3)',
-          transition: 'border-color 0.2s, box-shadow 0.2s',
-        }}
+        className={`chat-input-form${isRecording ? ' recording' : ''}`}
       >
+        {/* Textarea */}
         <textarea
           ref={textareaRef}
           value={isTranscribing ? '' : input}
@@ -176,30 +146,20 @@ export default function ChatInput() {
               ? 'Transcribiendo...'
               : isRecording
               ? 'Grabando...'
-              : activeFolder
-              ? `Escribe en ${activeFolder.name}...`
-              : 'Selecciona una carpeta para comenzar...'
+              : 'Escribe un mensaje...'
           }
           rows={1}
+          className="chat-textarea"
           style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            resize: 'none',
-            fontSize: '0.92rem',
             color: isTranscribing || isRecording
-              ? 'rgba(255,255,255,0.35)'
+              ? 'rgba(255,255,255,0.3)'
               : 'rgba(255,255,255,0.92)',
-            lineHeight: 1.65,
-            maxHeight: '140px',
-            fontFamily: 'inherit',
           }}
           disabled={isDisabled || isRecording}
           readOnly={isTranscribing}
         />
 
-        {/* Timer de grabación */}
+        {/* Recording timer */}
         {isRecording && (
           <span style={{
             fontSize: '0.75rem',
@@ -212,72 +172,57 @@ export default function ChatInput() {
           </span>
         )}
 
-        {/* Botón mic o enviar */}
-        {showMic ? (
-          <button
-            type="button"
-            onClick={handleMicClick}
-            disabled={!activeFolder || isTranscribing}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: activeFolder && !isTranscribing ? 'pointer' : 'not-allowed',
-              background: isRecording ? '#ef4444' : 'rgba(255,255,255,0.1)',
-              color: isRecording ? '#ffffff' : 'rgba(255,255,255,0.55)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'all 0.15s ease',
-              animation: isRecording ? 'micPulse 1.2s ease-in-out infinite' : 'none',
-            }}
-          >
-            {isRecording ? <Square size={14} fill="currentColor" /> : <Mic size={16} />}
-          </button>
-        ) : (
+        {/* Left button group: voice mode + mic */}
+        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+          {/* Voice mode button — always visible */}
+          {onVoiceOpen && (
+            <button
+              type="button"
+              onClick={onVoiceOpen}
+              title="Modo voz"
+              className="voice-btn"
+              disabled={!activeFolder}
+              style={{ opacity: activeFolder ? 1 : 0.4, cursor: activeFolder ? 'pointer' : 'not-allowed' }}
+            >
+              <Headphones size={15} />
+            </button>
+          )}
+
+          {/* Mic button — only when no text typed */}
+          {!hasText && (
+            <button
+              type="button"
+              onClick={handleMicClick}
+              disabled={!activeFolder || isTranscribing}
+              className={`mic-btn${isRecording ? ' recording' : ''}`}
+              title={isRecording ? 'Detener grabacion' : 'Grabar audio'}
+            >
+              {isRecording
+                ? <Square size={14} fill="currentColor" />
+                : <Mic size={16} />
+              }
+            </button>
+          )}
+        </div>
+
+        {/* Send button — only when there's text */}
+        {hasText && (
           <button
             type="submit"
             disabled={!canSend}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: canSend ? 'pointer' : 'not-allowed',
-              background: canSend ? '#ffffff' : 'rgba(255,255,255,0.1)',
-              color: canSend ? '#111111' : 'rgba(255,255,255,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'all 0.15s ease',
-            }}
+            className="send-btn"
+            title="Enviar"
           >
             <ArrowUp size={16} />
           </button>
         )}
       </form>
 
-      {/* Animación pulse para el botón de grabar */}
-      <style>{`
-        @keyframes micPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-          50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
-        }
-      `}</style>
-
-      <p style={{
-        maxWidth: '760px',
-        margin: '0.45rem auto 0',
-        fontSize: '0.68rem',
-        color: 'rgba(255,255,255,0.16)',
-        textAlign: 'center',
-      }}>
+      {/* Disclaimer */}
+      <p className="chat-disclaimer">
         {isRecording
-          ? 'Toca el cuadrado para detener y transcribir'
-          : 'Ozone recuerda todo lo que le contas. Shift+Enter para nueva linea.'}
+          ? 'Toca el cuadrado para detener y enviar'
+          : 'Ozone recuerda todo. Puede cometer errores.'}
       </p>
     </div>
   )

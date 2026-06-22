@@ -9,11 +9,9 @@ import useChatStore from './store/chatStore'
 import { supabase } from './config/supabase'
 import * as api from './services/api'
 
-// Derive base URL from VITE_API_URL (strip trailing /api) or use Render default
 const _rawApi = import.meta.env.VITE_API_URL || 'https://ozone-0qpm.onrender.com/api'
 const BACKEND_URL = _rawApi.replace(/\/api\/?$/, '')
 
-// Wake up Render backend in background (fire-and-forget)
 function pingBackend() {
   fetch(`${BACKEND_URL}/api/health`, { method: 'GET' })
     .then(() => console.log('[Wake-up] backend ping OK'))
@@ -30,12 +28,8 @@ function App() {
   const deferredPromptRef = useRef(null)
   const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders, session, setSession, activeFolder } = useChatStore()
 
-  // Ping backend immediately to wake Render from cold start
-  useEffect(() => {
-    pingBackend()
-  }, [])
+  useEffect(() => { pingBackend() }, [])
 
-  // Capture beforeinstallprompt for Android Chrome
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault()
@@ -54,7 +48,6 @@ function App() {
     deferredPromptRef.current = null
   }
 
-  // 1. Verificar sesion existente al arrancar (no bloquea render inicial)
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       setSession(s)
@@ -68,10 +61,7 @@ function App() {
         setSetupDone(true)
       }
       setAuthChecked(true)
-    }).catch(() => {
-      // Supabase unreachable — mark as checked so we show AuthScreen
-      setAuthChecked(true)
-    })
+    }).catch(() => { setAuthChecked(true) })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       setSession(s)
@@ -95,13 +85,10 @@ function App() {
     return () => subscription.unsubscribe()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 2. Cargar datos DESPUES de que el setup haya creado las carpetas
   useEffect(() => {
     if (!authChecked || !session || !setupDone) return
-
     const load = async () => {
       await fetchFolders()
-      // Mostrar la app apenas los datos esten listos, sin espera artificial
       setDataReady(true)
       setTimeout(() => setSplashMounted(false), 950)
     }
@@ -113,37 +100,23 @@ function App() {
     try {
       const name = newSession.user?.user_metadata?.full_name || newSession.user?.email
       await api.authSetup(name)
-    } catch {
-      // normal
-    }
+    } catch { /* normal */ }
     setSetupDone(true)
   }
 
-  // Mostrar splash inmediatamente mientras se verifica auth
-  // NO retornar null — el splash ya esta montado desde el inicio
-  if (!authChecked) {
-    return <SplashScreen visible={true} />
-  }
-
+  if (!authChecked) return <SplashScreen visible={true} />
   if (!session) return <AuthScreen onAuth={handleAuth} />
 
   return (
     <>
-      {/* Splash — fades out to reveal dark chat */}
       {splashMounted && <SplashScreen visible={!dataReady} />}
 
       <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#212121' }}>
+
         {/* Mobile backdrop */}
         {sidebarOpen && (
           <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 30,
-              background: 'rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(2px)',
-            }}
-            className="md:hidden"
+            className="sidebar-backdrop"
             onClick={closeSidebar}
           />
         )}
@@ -152,34 +125,64 @@ function App() {
         <Sidebar currentView={view} onViewChange={setView} />
 
         {/* Main content */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-          {/* Mobile top bar */}
+        <main style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          minWidth: 0,
+          background: '#212121',
+        }}>
+          {/* Mobile top bar — hamburger + folder name */}
           <div
             className="md:hidden"
             style={{
               position: 'sticky',
               top: 0,
-              zIndex: 50,
+              zIndex: 20,
               display: 'flex',
               alignItems: 'center',
-              gap: '0.75rem',
-              padding: '0.7rem 1rem',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              height: '52px',
+              padding: '0 1rem',
               background: '#212121',
               flexShrink: 0,
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}
           >
+            {/* Hamburger */}
             <button
               onClick={toggleSidebar}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.55)', padding: '2px', display: 'flex' }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'rgba(255,255,255,0.6)',
+                padding: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '8px',
+                minWidth: '44px',
+                minHeight: '44px',
+              }}
               aria-label="Abrir menu"
             >
               <Menu size={20} />
             </button>
-            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.06em', flex: 1 }}>
+
+            {/* Folder name — centered */}
+            <span style={{
+              flex: 1,
+              textAlign: 'center',
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.88)',
+            }}>
               {activeFolder ? activeFolder.name : 'Ozone'}
             </span>
-            {installPrompt && (
+
+            {/* Install button or spacer */}
+            {installPrompt ? (
               <button
                 onClick={handleInstall}
                 title="Instalar Ozone"
@@ -189,19 +192,20 @@ function App() {
                   borderRadius: '6px',
                   cursor: 'pointer',
                   color: '#fff',
-                  padding: '4px 10px',
+                  padding: '5px 10px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  fontSize: '0.78rem',
+                  fontSize: '0.75rem',
                   fontWeight: 600,
-                  letterSpacing: '0.02em',
-                  flexShrink: 0,
+                  minHeight: '44px',
                 }}
               >
                 <Download size={13} />
                 Instalar
               </button>
+            ) : (
+              <div style={{ minWidth: '44px' }} />
             )}
           </div>
 

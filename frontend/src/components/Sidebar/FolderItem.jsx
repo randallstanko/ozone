@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 
 export default function FolderItem({ folder, isActive, onClick }) {
@@ -35,7 +35,7 @@ export default function FolderItem({ folder, isActive, onClick }) {
 
   if (isRenaming) {
     return (
-      <form onSubmit={handleRename} style={{ padding: '2px 4px' }}>
+      <form onSubmit={handleRename} style={{ padding: '2px 4px', margin: '1px 0' }}>
         <input
           type="text"
           value={newName}
@@ -43,11 +43,11 @@ export default function FolderItem({ folder, isActive, onClick }) {
           style={{
             width: '100%',
             boxSizing: 'border-box',
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid #6366f1',
+            background: 'rgba(255,255,255,0.07)',
+            border: '1px solid rgba(99,102,241,0.5)',
             borderRadius: '0.5rem',
             padding: '0.5rem 0.75rem',
-            fontSize: '0.85rem',
+            fontSize: '0.875rem',
             color: '#ffffff',
             outline: 'none',
             fontFamily: 'inherit',
@@ -62,36 +62,20 @@ export default function FolderItem({ folder, isActive, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="folder-item-gpt"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.6rem',
-        padding: '0.55rem 0.75rem',
-        borderRadius: '0.65rem',
-        cursor: 'pointer',
-        position: 'relative',
-        transition: 'background 0.15s',
-        background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-        marginBottom: '2px',
-      }}
-      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.055)' }}
-      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+      className={`sidebar-item folder-item-gpt${isActive ? ' active' : ''}`}
+      style={{ marginBottom: '1px', position: 'relative' }}
     >
-      <span style={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>{folder.icon}</span>
-      <span style={{
-        flex: 1,
-        fontSize: '0.85rem',
-        color: isActive ? '#ffffff' : 'rgba(255,255,255,0.65)',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        fontWeight: isActive ? 500 : 400,
-      }}>
+      {/* Icon */}
+      <span style={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>
+        {folder.icon}
+      </span>
+
+      {/* Name */}
+      <span className="sidebar-item-text">
         {folder.name}
       </span>
 
-      {/* 3-dot menu */}
+      {/* 3-dot menu — only for non-general folders */}
       {!folder.is_general && (
         <div
           className="folder-menu-wrap"
@@ -106,15 +90,21 @@ export default function FolderItem({ folder, isActive, onClick }) {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: 'rgba(255,255,255,0.3)',
-              padding: '2px',
+              color: 'rgba(255,255,255,0.35)',
+              padding: '3px',
               borderRadius: '4px',
               display: 'flex',
               opacity: 0,
-              transition: 'opacity 0.15s, color 0.15s',
+              transition: 'opacity 150ms ease, color 150ms ease',
+              minWidth: '24px',
+              minHeight: '24px',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
+            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
           >
-            <MoreVertical size={13} />
+            <MoreHorizontal size={14} />
           </button>
 
           {showMenu && (
@@ -123,12 +113,12 @@ export default function FolderItem({ folder, isActive, onClick }) {
               right: 0,
               top: '100%',
               marginTop: '4px',
-              width: '150px',
+              width: '160px',
               background: '#2a2a2a',
               border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '0.65rem',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
-              zIndex: 50,
+              borderRadius: '0.75rem',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.55)',
+              zIndex: 100,
               overflow: 'hidden',
             }}>
               <button
@@ -138,16 +128,17 @@ export default function FolderItem({ folder, isActive, onClick }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.6rem 0.85rem',
-                  fontSize: '0.82rem',
-                  color: 'rgba(255,255,255,0.75)',
+                  padding: '0.6rem 0.875rem',
+                  fontSize: '0.8125rem',
+                  color: 'rgba(255,255,255,0.78)',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                   textAlign: 'left',
+                  minHeight: '40px',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >
                 <Pencil size={13} />
@@ -160,16 +151,17 @@ export default function FolderItem({ folder, isActive, onClick }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.6rem 0.85rem',
-                  fontSize: '0.82rem',
+                  padding: '0.6rem 0.875rem',
+                  fontSize: '0.8125rem',
                   color: '#f87171',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                   textAlign: 'left',
+                  minHeight: '40px',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >
                 <Trash2 size={13} />
