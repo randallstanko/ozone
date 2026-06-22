@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://ozone-0qpm.onrender.com
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 15000, // 15 s max per request — prevents splash from hanging forever
   headers: {
     'Content-Type': 'application/json',
   },
@@ -49,7 +50,7 @@ export const getGlobalMemory = () => api.get('/memory/global')
 export const searchMemory = (q) => api.get('/memory/search', { params: { q } })
 
 // Auth setup (crear carpetas y memoria para nuevo usuario)
-export const authSetup = (name) => api.post('/auth/setup', { name })
+export const authSetup = (name) => api.post('/auth/setup', { name }, { timeout: 8000 })
 
 // Transcripción de audio (Groq Whisper)
 export const transcribeAudio = async (audioBlob) => {

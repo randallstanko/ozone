@@ -18,6 +18,9 @@ function pingBackend() {
     .catch(() => console.log('[Wake-up] backend ping failed (still waking)'))
 }
 
+// Hard cap: close splash after this many ms no matter what
+const SPLASH_MAX_MS = 9000
+
 function App() {
   const [view, setView] = useState('chat')
   const [dataReady, setDataReady] = useState(false)
@@ -26,9 +29,24 @@ function App() {
   const [setupDone, setSetupDone] = useState(false)
   const [installPrompt, setInstallPrompt] = useState(null)
   const deferredPromptRef = useRef(null)
+  const splashKilledRef = useRef(false)
   const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders, session, setSession, activeFolder } = useChatStore()
 
+  // Safety net: if splash is still showing after SPLASH_MAX_MS, force-close it
+  const killSplash = () => {
+    if (splashKilledRef.current) return
+    splashKilledRef.current = true
+    setDataReady(true)
+    setSplashMounted(false)
+  }
+
   useEffect(() => { pingBackend() }, [])
+
+  // Global safety timeout — splash MUST close within SPLASH_MAX_MS
+  useEffect(() => {
+    const t = setTimeout(killSplash, SPLASH_MAX_MS)
+    return () => clearTimeout(t)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handler = (e) => {
@@ -79,6 +97,7 @@ function App() {
         setSetupDone(false)
         setDataReady(false)
         setSplashMounted(true)
+        splashKilledRef.current = false // reset so the next login attempt has its own safety net
       }
     })
 
@@ -88,9 +107,14 @@ function App() {
   useEffect(() => {
     if (!authChecked || !session || !setupDone) return
     const load = async () => {
-      await fetchFolders()
+      try {
+        await fetchFolders()
+      } catch (err) {
+        console.error('[App] fetchFolders failed, proceeding anyway:', err?.message)
+      }
+      // Always close splash after data attempt, whether it succeeded or not
       setDataReady(true)
-      setTimeout(() => setSplashMounted(false), 950)
+      setTimeout(() => killSplash(), 950)
     }
     load()
   }, [authChecked, session, setupDone]) // eslint-disable-line react-hooks/exhaustive-deps
