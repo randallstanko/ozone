@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Menu } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Menu, Download } from 'lucide-react'
 import Sidebar from './components/Sidebar/Sidebar'
 import ChatArea from './components/Chat/ChatArea'
 import NotesPanel from './components/Notes/NotesPanel'
@@ -15,7 +15,28 @@ function App() {
   const [splashMounted, setSplashMounted] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
   const [setupDone, setSetupDone] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const deferredPromptRef = useRef(null)
   const { sidebarOpen, toggleSidebar, closeSidebar, fetchFolders, session, setSession, activeFolder } = useChatStore()
+
+  // Capture beforeinstallprompt for Android Chrome
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault()
+      deferredPromptRef.current = e
+      setInstallPrompt(true)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const handleInstall = async () => {
+    if (!deferredPromptRef.current) return
+    deferredPromptRef.current.prompt()
+    const { outcome } = await deferredPromptRef.current.userChoice
+    if (outcome === 'accepted') setInstallPrompt(false)
+    deferredPromptRef.current = null
+  }
 
   // 1. Verificar sesion existente al arrancar
   useEffect(() => {
@@ -136,9 +157,33 @@ function App() {
             >
               <Menu size={20} />
             </button>
-            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.06em' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.06em', flex: 1 }}>
               {activeFolder ? activeFolder.name : 'Ozone'}
             </span>
+            {installPrompt && (
+              <button
+                onClick={handleInstall}
+                title="Instalar Ozone"
+                style={{
+                  background: 'linear-gradient(135deg, #4f1b7c, #7c3aed)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  padding: '4px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.02em',
+                  flexShrink: 0,
+                }}
+              >
+                <Download size={13} />
+                Instalar
+              </button>
+            )}
           </div>
 
           {view === 'chat' ? <ChatArea /> : <NotesPanel />}
