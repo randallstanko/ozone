@@ -171,9 +171,9 @@ export default function ChatInput({ onVoiceOpen }) {
           </span>
         )}
 
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: '4px', flexShrink: 0, alignItems: 'center' }}>
-          {/* Voice mode button — always visible */}
+        {/* Right-side buttons: headphones | mic-or-send */}
+        <div style={{ display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
+          {/* Voice mode button — always visible, indigo accent */}
           {onVoiceOpen && (
             <button
               type="button"
@@ -186,6 +186,14 @@ export default function ChatInput({ onVoiceOpen }) {
               <Headphones size={15} />
             </button>
           )}
+
+          {/* Divider */}
+          <div style={{
+            width: '1px',
+            height: '20px',
+            background: 'rgba(255,255,255,0.07)',
+            flexShrink: 0,
+          }} />
 
           {/* Mic button — only when no text */}
           {!hasText && (

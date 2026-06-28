@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ozone-v3';
+const CACHE_NAME = 'ozone-v4';
 const APP_SHELL = [
   '/manifest.json',
   '/icons/icon-192.png',

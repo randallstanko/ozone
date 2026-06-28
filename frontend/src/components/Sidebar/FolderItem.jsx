@@ -1,6 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, MessageCircle, Wallet, Heart, BookOpen, Activity, Rocket, Smile } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
+
+// Map folder name -> Lucide icon component
+const FOLDER_ICONS = {
+  'General': MessageCircle,
+  'Finanzas': Wallet,
+  'Relaciones': Heart,
+  'Estudio': BookOpen,
+  'Salud': Activity,
+  'Proyectos': Rocket,
+  'Emociones': Smile,
+}
 
 export default function FolderItem({ folder, isActive, onClick }) {
   const { renameFolder, deleteFolder } = useChatStore()
@@ -32,6 +43,8 @@ export default function FolderItem({ folder, isActive, onClick }) {
     await deleteFolder(folder.id)
     setShowMenu(false)
   }
+
+  const IconComponent = FOLDER_ICONS[folder.name]
 
   if (isRenaming) {
     return (
@@ -65,9 +78,12 @@ export default function FolderItem({ folder, isActive, onClick }) {
       onClick={onClick}
       className={`sidebar-item folder-item-gpt${isActive ? ' active' : ''}`}
     >
-      {/* Emoji icon */}
+      {/* Lucide icon (fallback to emoji if not mapped) */}
       <span className="sidebar-item-icon">
-        {folder.icon}
+        {IconComponent
+          ? <IconComponent size={15} strokeWidth={1.6} />
+          : <span style={{ fontSize: '0.875rem', lineHeight: 1 }}>{folder.icon}</span>
+        }
       </span>
 
       {/* Name */}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { PenSquare, LogOut, MessageSquare } from 'lucide-react'
+import { X, LogOut, MessageSquare } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import FolderItem from './FolderItem'
 import { supabase } from '../../config/supabase'
@@ -74,7 +74,7 @@ export default function Sidebar({ currentView, onViewChange }) {
           onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
           onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; e.currentTarget.style.background = 'none' }}
         >
-          <PenSquare size={15} />
+          <X size={15} />
         </button>
       </div>
 

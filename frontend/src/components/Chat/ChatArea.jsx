@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Headphones, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import MessageBubble from './MessageBubble'
 import ChatInput from './ChatInput'
@@ -25,9 +25,9 @@ function OzoneOrb({ size = 14 }) {
 // Returns greeting based on current hour
 function getGreeting(name) {
   const hour = new Date().getHours()
-  if (hour >= 5 && hour < 12) return `Buenos dias, ${name} 👋`
-  if (hour >= 12 && hour < 19) return `Buenas tardes, ${name} 👋`
-  return `Buenas noches, ${name} 👋`
+  if (hour >= 5 && hour < 12) return `Buenos dias, ${name}`
+  if (hour >= 12 && hour < 19) return `Buenas tardes, ${name}`
+  return `Buenas noches, ${name}`
 }
 
 const SUGGESTIONS = [
@@ -64,28 +64,15 @@ export default function ChatArea() {
       {/* Voice mode overlay */}
       {voiceOpen && <VoiceMode onClose={() => setVoiceOpen(false)} />}
 
-      {/* Desktop header */}
+      {/* Desktop header — only shown on md+ screens */}
       <header className="chat-header hidden md:flex">
         <div className="chat-header-folder">
           {activeFolder && (
-            <>
-              <span style={{ fontSize: '1rem' }}>{activeFolder.icon}</span>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
-                {activeFolder.name}
-              </span>
-            </>
+            <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+              {activeFolder.name}
+            </span>
           )}
         </div>
-
-        {activeFolder && (
-          <button
-            onClick={() => setVoiceOpen(true)}
-            title="Modo voz"
-            className="voice-btn"
-          >
-            <Headphones size={15} />
-          </button>
-        )}
       </header>
 
       {/* Messages scroll area */}
@@ -182,38 +169,6 @@ export default function ChatArea() {
 
       {/* Chat input */}
       <ChatInput onVoiceOpen={() => setVoiceOpen(true)} />
-
-      {/* Mobile voice FAB */}
-      {activeFolder && !voiceOpen && (
-        <button
-          className="md:hidden"
-          onClick={() => setVoiceOpen(true)}
-          aria-label="Modo voz"
-          style={{
-            position: 'fixed',
-            bottom: '88px',
-            right: '1rem',
-            width: '44px',
-            height: '44px',
-            borderRadius: '50%',
-            border: '1px solid rgba(99,102,241,0.28)',
-            background: 'rgba(10,10,15,0.85)',
-            color: '#818cf8',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 40,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(8px)',
-            transition: 'transform 200ms ease',
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          <Headphones size={18} />
-        </button>
-      )}
     </div>
   )
 }
