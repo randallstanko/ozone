@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ozone-v2';
+const CACHE_NAME = 'ozone-v3';
 const APP_SHELL = [
   '/manifest.json',
   '/icons/icon-192.png',
@@ -13,16 +13,19 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: clean old caches + claim clients immediately
+// Activate: nuke ALL caches (including old ozone-v1, ozone-v2, etc.) + claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-      )
-    )
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
   );
   self.clients.claim();
+});
+
+// Message: allow the main thread to force this SW to take over immediately
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Fetch: network-first for everything (HTML, JS, CSS, API)

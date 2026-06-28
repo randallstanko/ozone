@@ -19,7 +19,7 @@ function pingBackend() {
 }
 
 // Hard cap: close splash after this many ms no matter what
-const SPLASH_MAX_MS = 9000
+const SPLASH_MAX_MS = 5000
 
 function App() {
   const [view, setView] = useState('chat')
@@ -114,7 +114,7 @@ function App() {
       }
       // Always close splash after data attempt, whether it succeeded or not
       setDataReady(true)
-      setTimeout(() => killSplash(), 950)
+      setTimeout(() => killSplash(), 300)
     }
     load()
   }, [authChecked, session, setupDone]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -158,21 +158,7 @@ function App() {
           background: '#0a0a0f',
         }}>
           {/* Mobile top bar — hamburger + folder name */}
-          <div
-            className="md:hidden mobile-topbar"
-            style={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 20,
-              display: 'flex',
-              alignItems: 'center',
-              height: '52px',
-              padding: '0 1rem',
-              background: '#0a0a0f',
-              flexShrink: 0,
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
+          <div className="md:hidden mobile-topbar">
             {/* Hamburger */}
             <button
               onClick={toggleSidebar}
